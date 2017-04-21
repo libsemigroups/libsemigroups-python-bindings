@@ -1,4 +1,4 @@
-#cython: infer_types=True, embedsignature=True
+# cython: infer_types=True, embedsignature=True
 """
 Python bindings for the libsemigroups C++ library.
 
@@ -24,10 +24,6 @@ from libc.stdint cimport uint16_t
 from libcpp.vector cimport vector
 cimport semigroups_cpp as cpp
 from libcpp cimport bool
-
-#cdef class MyCppElement(cpp.Element):
-#    pass
-
 
 cdef class Element:
     """
