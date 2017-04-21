@@ -41,7 +41,8 @@ setup(
                       depends=["semigroups_cpp.h", "semigroups_cpp.pxd"],
                       libraries=["semigroups"],
                       language="c++",             # generate C++ code
-                      extra_compile_args=["-std=c++11"],
+                      extra_compile_args=["-std=c++11",
+                                          "-mmacosx-version-min=10.9"],
                       )]),
 
     #setup_requires=['pytest-runner', 'pytest-cython'], # temporarilly disabled to build conda package
