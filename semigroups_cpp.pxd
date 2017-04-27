@@ -53,19 +53,19 @@ cdef extern from "<libsemigroups/semigroups.h>" namespace "libsemigroups":
 
 cdef extern from "libsemigroups/cong.h" namespace "libsemigroups":
     cdef cppclass Congruence:
-        Congruence(string, size_t, vector[pair[vector[uint64_t],vector[uint64_t]]],
-                        vector[pair[vector[uint64_t],vector[uint64_t]]]) except +
+        Congruence(string, 
+                   size_t, 
+                   vector[pair[vector[size_t],vector[size_t]]],
+                   vector[pair[vector[size_t],vector[size_t]]]) except +
         int nr_classes()
-        int word_to_class_index(vector[uint64_t] word)
+        int word_to_class_index(vector[size_t] word)
         void set_report(bool val)
         void set_max_threads(size_t nr_threads)
-        
 
 cdef extern from "libsemigroups/rws.h" namespace "libsemigroups":
     cdef cppclass RWS:
-        RWS(vector[pair[vector[uint64_t],vector[uint64_t]]]) except +
+        RWS(vector[pair[vector[size_t],vector[size_t]]]) except +
         bool is_confluent()
-      
 
 cdef extern from "semigroups_cpp.h" namespace "libsemigroups":
     cdef cppclass PythonElement(Element):

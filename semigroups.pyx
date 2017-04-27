@@ -27,8 +27,7 @@ from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.pair cimport pair
 from libc.stdint cimport uint32_t
-from libc.stdint cimport uint64_t
-
+    
 cdef class Element:
     """
     An abstract base class for handles to libsemigroups elements.
@@ -437,10 +436,10 @@ cdef class FpSemigroup(Semigroup):
     #(even if using integer notation)
     cdef vector[string] _alphabet
 
-    cdef vector[pair[vector[uint64_t],vector[uint64_t]]] _relations
+    cdef vector[pair[vector[size_t],vector[size_t]]] _relations
 
     #a vector of relations used to define a congruence
-    cdef vector[pair[vector[uint64_t],vector[uint64_t]]] _extra
+    cdef vector[pair[vector[size_t],vector[size_t]]] _extra
 
     #a boolean which is true when string notation is used for words 
     #and false when integer notation is used for words
@@ -537,16 +536,21 @@ cdef class FpSemigroup(Semigroup):
                             rels[i][j][k]=alphabet.index(rels[i][j][k])
         else:
             #Checks that not attempting to define relations on empty semigroup.
-            if not len(rels)==0: raise ValueError("empty semigroup can't have"+
-                                                    " any valid relations")
+            if not len(rels)==0: 
+                raise ValueError("empty semigroup can't have" +
+                                 " any valid relations")
             self._is_string_alphabet = True
 
         #stores alphabet as a c string vector(even if input is integer vector)
         self._alphabet = [str(i).encode('UTF-8')for i in alphabet]
         self._relations = rels
-        self._extra = rels
-        self._congruence = new cpp.Congruence(self._cong,self._size,
-                                                self._relations,self._extra)
+        self._extra = rels 
+
+        cdef vector[pair[vector[size_t], vector[size_t]]] cpp_rels = rels
+        self._congruence = new cpp.Congruence("twosided",
+                                              len(alphabet) + 1,
+                                              [],
+                                              cpp_rels)
 
     #TODO write == method for FpSemigroup
     def size(self):
@@ -678,14 +682,14 @@ cdef class FpSemigroup(Semigroup):
 
     def is_confluent(self):
         '''
-        check if the relations of the FpSemigroup are confulent.
+        check if the relations of the FpSemigroup are confluent.
 
         Examples:
             >>> FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"],
-                                                  ["ab","ba"]]).is_confluent()
+                                                  ["ab","ba"]).is_confluent()
             True
             >>> FpSemigroup(["a","b"],[["aa","a"],["bab","ab"],
-                                                  ["ab","ba"]]).is_confluent()
+                                                  ["ab","ba"]).is_confluent()
             False
 
         Args:
@@ -727,23 +731,20 @@ cdef class FpSemigroup(Semigroup):
             ValueError: if 1st argument is an FpSemigroupElement 
             but not in this semigroup.
         '''
-        if not isinstance(word,FpSemigroupElement):
-            raise TypeError("given word is not an FpSemigroupElement")
+        #if not isinstance(word,FpSemigroupElement):
+        #    raise TypeError("given word is not an FpSemigroupElement")
 
-        if isinstance(word,FpSemigroupElement):
-            if not word.semigroup() is self:
-                raise ValueError("given word is not in given semigroup")
-            word=word.word()
+        #if isinstance(word,FpSemigroupElement):
+        #    if not word.semigroup() is self:
+        #        raise ValueError("given word is not in given semigroup")
+        #    word=word.word()
 
         if isinstance(word,str):word=list(word)
         
         for i in xrange(len(word)):
             word[i]=self.alphabet().index(word[i])
 
-
-
-        cdef vector[uint64_t] Word = word
-        return self._congruence.word_to_class_index(Word)
+        return self._congruence.word_to_class_index(word)
 
 
     def __dealloc__(self):
@@ -806,7 +807,7 @@ cdef class FpMonoid(FpSemigroup):
     <FpMonoid <1,2|11=1,222=12,12=21>>
 
     """    
-    cdef vector[pair[vector[uint64_t],vector[uint64_t]]] _e_relations
+    cdef vector[pair[vector[size_t],vector[size_t]]] _e_relations
 
     cdef vector[string] _e_alphabet
 
@@ -920,8 +921,11 @@ cdef class FpMonoid(FpSemigroup):
         righteq = [[[0,i+1],[i+1]]for i in xrange(self._size)]
 
         self._e_relations = rels + [[[0,0],[0]]] + lefteq + righteq
-        self._congruence = new cpp.Congruence(self._cong,self._size + 1,
-                                                self._e_relations,self._extra)
+        self._congruence = new cpp.Congruence("twosided", 
+                                              len(alphabet) + 1,
+                                              #TODO why the + 1??
+                                              self._e_relations, 
+                                              self._extra)
 
     def alphabet(self):
         '''
@@ -980,345 +984,345 @@ cdef class FpMonoid(FpSemigroup):
             return "<FpMonoid with %s generators and %s relations>"%(
                     `len(self._alphabet)`,`len(self._relations)`)
 
-cdef class FpSemigroupElement(Element):
-    """FpSemigroupElement Object
-
-    Examples:
-    >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
-    >>> FpSemigroupElement(FpS,"a")
-    <FpSemigroup Element 'a'>
-    >>> FpSemigroupElement(FpS,"bab")
-    <FpSemigroup Element 'bab'>
-    >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,1,2],[1,2]],[[1,2],[2,1]]])
-    >>> FpSemigroupElement(FpS,[1])
-    <FpSemigroup Element '[1]'>
-    >>> FpSemigroupElement(FpS,[2,1,2])
-    <FpSemigroup Element '[2, 1, 2]'>
-
-
-    """ 
-    cdef FpSemigroup _FpS
-    cdef string _Word
-
-    def __init__(self,FpS,word):
-        '''
-        Construct an FpSemigroup element from an FpSemigroup and a string.
-        
-        Args:
-            FpS (FpSemigroup): The FpSemigroup of which the given word is 
-            an element.
-            word (list/string): a string or a list containg generators of
-            the given semigroup.
-
-        Returns:
-            None.
-
-        Raises:
-            TypeError: If 1st argument is not an FpSemigroup object or the
-            second argument is not a string or a list.
-            ValueError: If the word contains a generator not n the alphabet
-            of the given semigroup.
-        '''       
-        if not isinstance(FpS,FpSemigroup):
-            raise TypeError("given Semigroup is not a valid FpSemigroup") 
-        if not (isinstance(word,str) or isinstance(word,list)):
-            raise TypeError("given word must be a string or list of integers")
-        self._FpS = FpS
-
-        for i in word:
-                if not i in FpS.alphabet():
-                    raise ValueError("given word is not in the given FpMonoid")
-
-        if self._FpS._is_string_alphabet:
-            if word =="":
-                raise ValueError("empty word not well defined")
-            else:
-                self._Word = word.encode('UTF-8')
-        else:
-            if word =="":
-                raise ValueError("empty word not well defined")
-            else:
-                self._Word = str(word).encode('UTF-8')
-
-    def semigroup(self):
-        '''
-        retrurns the semigroup of which this element is a member.
-
-        Examples:
-            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
-                                                     ,["ab","ba"]])
-            >>> FpSemigroupElement(FpS,"bab").semigroup()
-            <FpSemigroup <a,b|aa=a,bbb=ab,ab=ba>>
-            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,1,2],[1,2]]
-                                                  ,[[1,2],[2,1]]])
-            >>> FpSemigroupElement(FpS,[1]).semigroup()
-            <FpSemigroup <1,2|11=1,212=12,12=21>>
-
-        Args:
-            None.
-
-        Returns:
-            FpSemigroup:semigroup of which this element is a member
-
-        Raises:
-            None.
-        '''
-        return self._FpS
-
-    def word(self):
-        '''
-        retrurns the word representing the element as a string or list.
-
-        Examples:
-            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
-                                                     ,["ab","ba"]])
-            >>> FpSemigroupElement(FpS,"ab").word()
-            'ab'
-            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,1,2],[1,2]]
-                                                  ,[[1,2],[2,1]]])
-            >>> FpSemigroupElement(FpS,[1]).word()
-            [1]
-
-        Args:
-            None.
-
-        Returns:
-            string/list:word representing the element as a string or list.
-
-        Raises:
-            None.
-        '''
-        if self._FpS._is_string_alphabet:
-            return str(self._Word)[2:-1]
-        else:
-            return eval(self._Word)
-        
-
-    def __mul__(self, other):
-        '''
-        multiplies 2 FpSemigroup elements(self on left, other on right).
-
-        Examples:
-            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
-                                                     ,["ab","ba"]])
-            >>> FpSemigroupElement(FpS,"a")*FpSemigroupElement(FpS,"a")
-            0
-            >>> FpSemigroupElement(FpS,"a")*FpSemigroupElement(FpS,"ab")
-            1
-            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[2]]
-                                                  ,[[1,2],[2,1]]])
-            >>> FpSemigroupElement(FpS,[1])*FpSemigroupElement(FpS,[1])
-            0
-            >>> FpSemigroupElement(FpS,[1])*FpSemigroupElement(FpS,[1,2])
-            1
-
-        Args:
-            other (FpSemigroupElement):element to be multiplied by on the right
-
-        Returns:
-            int:class index of the solution to the multiplication
-
-        Raises:
-            None.
-        '''
-        if not (isinstance(other,FpSemigroupElement) and 
-                self.semigroup() is other.semigroup()):
-            raise TypeError("given words are not members"+
-                            " of the same FpSemigroup")
-        if isinstance(self.semigroup(),FpMonoid):
-            return self.semigroup().word_to_class_index(FpMonoidElement(
-                            self.semigroup(),self.word() + other.word()))
-        else:
-            return self.semigroup().word_to_class_index(FpSemigroupElement(
-                            self.semigroup(),self.word() + other.word()))
-
-    def word_to_class_index(self):
-        '''
-        returns the class index of self
-
-        Examples:
-        >>> FpMonoid(["a","b"],[["aa","a"],["bbb","b"],["ab","ba"]])
-        <FpMonoid <a,b|aa=a,bbb=b,ab=ba>>
-        >>> E=FpMonoidElement(_,"")
-        >>> E.word_to_class_index()
-        0
-        >>> A=FpMonoidElement(E.monoid(),"a")
-        >>> A.word_to_class_index()
-        1
-        >>> B=FpMonoidElement(E.monoid(),"b")
-        >>> B.word_to_class_index()
-        2
-
-        Args:
-            None.
-
-        Returns:
-            int: class index of self.
-
-        Raises:
-            None.
-
-        '''
-
-        return self.semigroup().word_to_class_index(self)
-
-    def __repr__(self):
-        '''
-        displays the FpSemigroup element
-
-        Examples:
-            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
-                                                     ,["ab","ba"]])
-            >>> FpSemigroupElement(FpS,"a")
-            <FpSemigroup Element 'a'>
-            >>> FpSemigroupElement(FpS,"ab")
-            <FpSemigroup Element 'ab'>
-            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[2]]
-                                                  ,[[1,2],[2,1]]])
-            >>> FpSemigroupElement(FpS,[1])
-            <FpSemigroup Element '[1]'>
-            >>> FpSemigroupElement(FpS,[1,2])
-            <FpSemigroup Element '[1, 2]'>
-
-        Args:
-            None.
-
-        Returns:
-            str: "<FpSemigroup Element 'word'>"
-
-        Raises:
-            None.
-        '''
-        return "<FpSemigroup Element " + str(self._Word)[1:] + ">"
-
-    def __dealloc__(self):
-        '''
-        deletes c objects when FpSemigroup element is deleted
-
-        Examples:
-            None.
-
-        Args:
-            None.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-        '''
-        del self._handle
-
-cdef class FpMonoidElement(FpSemigroupElement):
-    """FpMonoidElement Object
-
-    Examples:
-    >>> FpM=FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
-    >>> FpMonoidElement(FpM,"a")
-    <FpMonoid Element 'a'>
-    >>> FpMonoidElement(FpM,"bab")
-    <FpMonoid Element 'bab'>
-    >>> FpM=FpMonoid([1,2],[[[1,1],[1]],[[2,1,2],[1,2]],[[1,2],[2,1]]])
-    >>> FpMonoidElement(FpM,[1])
-    <FpMonoid Element '[1]'>
-    >>> FpMonoidElement(FpM,[2,1,2])
-    <FpMonoid Element '[2, 1, 2]'>
-    """ 
-
-
-    def __init__(self,FpM,word):
-        '''
-        Construct an fpMonoid element from an FpMonoid and a word.
-        
-        Args:
-            FpM (FpMonoid): The FpMonoid of which the given word is an element.
-            word (list/string): a string or a list containg generators of the
-            given semigroup.
-
-        Returns:
-            None.
-
-        Raises:
-            TypeError: If 1st argument is not an FpMonoid object or the second
-            argument is not a string or a list.
-            ValueError: If the word contains a generator not n the alphabet of
-            the given monoid.
-        '''       
-        if not isinstance(FpM,FpMonoid):
-            raise TypeError("given monoid is not a valid FpMonoid") 
-        if not (isinstance(word,str) or isinstance(word,list)):
-            raise TypeError("given word must be a string or list of integers")
-        self._FpS = FpM
-
-        for i in word:
-            if not i in FpM.alphabet():
-                raise ValueError("given word is not in the given FpMonoid")
-
-        if self._FpS._is_string_alphabet:
-            if word == []:
-                raise ValueError("given word is not in the given FpMonoid")
-            else:
-                if word =="":
-                    self._Word ="e".encode('UTF-8')
-                else:
-                    self._Word = word.encode('UTF-8')
-        else:
-            if word =="":
-                raise ValueError("given word is not in the given FpMonoid")
-            else:
-                if word == []:
-                    self._Word ="[0]".encode('UTF-8')
-                else:
-                    self._Word = str(word).encode('UTF-8')
-
-
-    def monoid(self):
-        '''
-        retrurns the monoid of which this element is a member.
-
-        Examples:
-            >>> FpM=FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
-            >>> FpMonoidElement(FpM,"bab").monoid()
-            <FpMonoid <a,b|aa=a,bbb=ab,ab=ba>>
-            >>> FpM=FpMonoid([1,2],[[[1,1],[1]],[[2,1,2],[1,2]],[[1,2],[2,1]]])
-            >>> FpMonoidElement(FpM,[1]).monoid()
-            <FpMonoid <1,2|11=1,212=12,12=21>>
-
-        Args:
-            None.
-
-        Returns:
-            FpMonoid:monoid of which this element is a member
-
-        Raises:
-            None.
-        '''
-        return self._FpS
-
-    def __repr__(self):
-        '''
-        displays the FpMonoid element
-
-        Examples:
-            >>> FpM=FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
-            >>> FpMonoidElement(FpM,"a")
-            <FpMonoid Element 'a'>
-            >>> FpMonoidElement(FpM,"ab")
-            <FpMonoid Element 'ab'>
-            >>> FpM=FpMonoid([1,2],[[[1,1],[1]],[[2,2,2],[2]],[[1,2],[2,1]]])
-            >>> FpMonoidElement(FpM,[1])
-            <FpMonoid Element '[1]'>
-            >>> FpMonoidElement(FpM,[1,2])
-            <FpMonoid Element '[1, 2]'>
-
-        Args:
-            None.
-
-        Returns:
-            str: "<FpSemigroup Element 'word'>"
-
-        Raises:
-            None.
-        '''
-        return "<FpMonoid Element " + str(self._Word)[1:] + ">"
-
+#cdef class FpSemigroupElement(Element):
+#    """FpSemigroupElement Object
+#
+#    Examples:
+#    >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
+#    >>> FpSemigroupElement(FpS,"a")
+#    <FpSemigroup Element 'a'>
+#    >>> FpSemigroupElement(FpS,"bab")
+#    <FpSemigroup Element 'bab'>
+#    >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,1,2],[1,2]],[[1,2],[2,1]]])
+#    >>> FpSemigroupElement(FpS,[1])
+#    <FpSemigroup Element '[1]'>
+#    >>> FpSemigroupElement(FpS,[2,1,2])
+#    <FpSemigroup Element '[2, 1, 2]'>
+#
+#
+#    """ 
+#    cdef FpSemigroup _FpS
+#    cdef string _Word
+#
+#    def __init__(self,FpS,word):
+#        '''
+#        Construct an FpSemigroup element from an FpSemigroup and a string.
+#        
+#        Args:
+#            FpS (FpSemigroup): The FpSemigroup of which the given word is 
+#            an element.
+#            word (list/string): a string or a list containg generators of
+#            the given semigroup.
+#
+#        Returns:
+#            None.
+#
+#        Raises:
+#            TypeError: If 1st argument is not an FpSemigroup object or the
+#            second argument is not a string or a list.
+#            ValueError: If the word contains a generator not n the alphabet
+#            of the given semigroup.
+#        '''       
+#        if not isinstance(FpS,FpSemigroup):
+#            raise TypeError("given Semigroup is not a valid FpSemigroup") 
+#        if not (isinstance(word,str) or isinstance(word,list)):
+#            raise TypeError("given word must be a string or list of integers")
+#        self._FpS = FpS
+#
+#        for i in word:
+#                if not i in FpS.alphabet():
+#                    raise ValueError("given word is not in the given FpMonoid")
+#
+#        if self._FpS._is_string_alphabet:
+#            if word =="":
+#                raise ValueError("empty word not well defined")
+#            else:
+#                self._Word = word.encode('UTF-8')
+#        else:
+#            if word =="":
+#                raise ValueError("empty word not well defined")
+#            else:
+#                self._Word = str(word).encode('UTF-8')
+#
+#    def semigroup(self):
+#        '''
+#        retrurns the semigroup of which this element is a member.
+#
+#        Examples:
+#            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
+#                                                     ,["ab","ba"]])
+#            >>> FpSemigroupElement(FpS,"bab").semigroup()
+#            <FpSemigroup <a,b|aa=a,bbb=ab,ab=ba>>
+#            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,1,2],[1,2]]
+#                                                  ,[[1,2],[2,1]]])
+#            >>> FpSemigroupElement(FpS,[1]).semigroup()
+#            <FpSemigroup <1,2|11=1,212=12,12=21>>
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            FpSemigroup:semigroup of which this element is a member
+#
+#        Raises:
+#            None.
+#        '''
+#        return self._FpS
+#
+#    def word(self):
+#        '''
+#        retrurns the word representing the element as a string or list.
+#
+#        Examples:
+#            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
+#                                                     ,["ab","ba"]])
+#            >>> FpSemigroupElement(FpS,"ab").word()
+#            'ab'
+#            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,1,2],[1,2]]
+#                                                  ,[[1,2],[2,1]]])
+#            >>> FpSemigroupElement(FpS,[1]).word()
+#            [1]
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            string/list:word representing the element as a string or list.
+#
+#        Raises:
+#            None.
+#        '''
+#        if self._FpS._is_string_alphabet:
+#            return str(self._Word)[2:-1]
+#        else:
+#            return eval(self._Word)
+#        
+#
+#    def __mul__(self, other):
+#        '''
+#        multiplies 2 FpSemigroup elements(self on left, other on right).
+#
+#        Examples:
+#            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
+#                                                     ,["ab","ba"]])
+#            >>> FpSemigroupElement(FpS,"a")*FpSemigroupElement(FpS,"a")
+#            0
+#            >>> FpSemigroupElement(FpS,"a")*FpSemigroupElement(FpS,"ab")
+#            1
+#            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[2]]
+#                                                  ,[[1,2],[2,1]]])
+#            >>> FpSemigroupElement(FpS,[1])*FpSemigroupElement(FpS,[1])
+#            0
+#            >>> FpSemigroupElement(FpS,[1])*FpSemigroupElement(FpS,[1,2])
+#            1
+#
+#        Args:
+#            other (FpSemigroupElement):element to be multiplied by on the right
+#
+#        Returns:
+#            int:class index of the solution to the multiplication
+#
+#        Raises:
+#            None.
+#        '''
+#        if not (isinstance(other,FpSemigroupElement) and 
+#                self.semigroup() is other.semigroup()):
+#            raise TypeError("given words are not members"+
+#                            " of the same FpSemigroup")
+#        if isinstance(self.semigroup(),FpMonoid):
+#            return self.semigroup().word_to_class_index(FpMonoidElement(
+#                            self.semigroup(),self.word() + other.word()))
+#        else:
+#            return self.semigroup().word_to_class_index(FpSemigroupElement(
+#                            self.semigroup(),self.word() + other.word()))
+#
+#    def word_to_class_index(self):
+#        '''
+#        returns the class index of self
+#
+#        Examples:
+#        >>> FpMonoid(["a","b"],[["aa","a"],["bbb","b"],["ab","ba"]])
+#        <FpMonoid <a,b|aa=a,bbb=b,ab=ba>>
+#        >>> E=FpMonoidElement(_,"")
+#        >>> E.word_to_class_index()
+#        0
+#        >>> A=FpMonoidElement(E.monoid(),"a")
+#        >>> A.word_to_class_index()
+#        1
+#        >>> B=FpMonoidElement(E.monoid(),"b")
+#        >>> B.word_to_class_index()
+#        2
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            int: class index of self.
+#
+#        Raises:
+#            None.
+#
+#        '''
+#
+#        return self.semigroup().word_to_class_index(self)
+#
+#    def __repr__(self):
+#        '''
+#        displays the FpSemigroup element
+#
+#        Examples:
+#            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
+#                                                     ,["ab","ba"]])
+#            >>> FpSemigroupElement(FpS,"a")
+#            <FpSemigroup Element 'a'>
+#            >>> FpSemigroupElement(FpS,"ab")
+#            <FpSemigroup Element 'ab'>
+#            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[2]]
+#                                                  ,[[1,2],[2,1]]])
+#            >>> FpSemigroupElement(FpS,[1])
+#            <FpSemigroup Element '[1]'>
+#            >>> FpSemigroupElement(FpS,[1,2])
+#            <FpSemigroup Element '[1, 2]'>
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            str: "<FpSemigroup Element 'word'>"
+#
+#        Raises:
+#            None.
+#        '''
+#        return "<FpSemigroup Element " + str(self._Word)[1:] + ">"
+#
+#    def __dealloc__(self):
+#        '''
+#        deletes c objects when FpSemigroup element is deleted
+#
+#        Examples:
+#            None.
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            None.
+#
+#        Raises:
+#            None.
+#        '''
+#        del self._handle
+#
+#cdef class FpMonoidElement(FpSemigroupElement):
+#    """FpMonoidElement Object
+#
+#    Examples:
+#    >>> FpM=FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
+#    >>> FpMonoidElement(FpM,"a")
+#    <FpMonoid Element 'a'>
+#    >>> FpMonoidElement(FpM,"bab")
+#    <FpMonoid Element 'bab'>
+#    >>> FpM=FpMonoid([1,2],[[[1,1],[1]],[[2,1,2],[1,2]],[[1,2],[2,1]]])
+#    >>> FpMonoidElement(FpM,[1])
+#    <FpMonoid Element '[1]'>
+#    >>> FpMonoidElement(FpM,[2,1,2])
+#    <FpMonoid Element '[2, 1, 2]'>
+#    """ 
+#
+#
+#    def __init__(self,FpM,word):
+#        '''
+#        Construct an fpMonoid element from an FpMonoid and a word.
+#        
+#        Args:
+#            FpM (FpMonoid): The FpMonoid of which the given word is an element.
+#            word (list/string): a string or a list containg generators of the
+#            given semigroup.
+#
+#        Returns:
+#            None.
+#
+#        Raises:
+#            TypeError: If 1st argument is not an FpMonoid object or the second
+#            argument is not a string or a list.
+#            ValueError: If the word contains a generator not n the alphabet of
+#            the given monoid.
+#        '''       
+#        if not isinstance(FpM,FpMonoid):
+#            raise TypeError("given monoid is not a valid FpMonoid") 
+#        if not (isinstance(word,str) or isinstance(word,list)):
+#            raise TypeError("given word must be a string or list of integers")
+#        self._FpS = FpM
+#
+#        for i in word:
+#            if not i in FpM.alphabet():
+#                raise ValueError("given word is not in the given FpMonoid")
+#
+#        if self._FpS._is_string_alphabet:
+#            if word == []:
+#                raise ValueError("given word is not in the given FpMonoid")
+#            else:
+#                if word =="":
+#                    self._Word ="e".encode('UTF-8')
+#                else:
+#                    self._Word = word.encode('UTF-8')
+#        else:
+#            if word =="":
+#                raise ValueError("given word is not in the given FpMonoid")
+#            else:
+#                if word == []:
+#                    self._Word ="[0]".encode('UTF-8')
+#                else:
+#                    self._Word = str(word).encode('UTF-8')
+#
+#
+#    def monoid(self):
+#        '''
+#        retrurns the monoid of which this element is a member.
+#
+#        Examples:
+#            >>> FpM=FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
+#            >>> FpMonoidElement(FpM,"bab").monoid()
+#            <FpMonoid <a,b|aa=a,bbb=ab,ab=ba>>
+#            >>> FpM=FpMonoid([1,2],[[[1,1],[1]],[[2,1,2],[1,2]],[[1,2],[2,1]]])
+#            >>> FpMonoidElement(FpM,[1]).monoid()
+#            <FpMonoid <1,2|11=1,212=12,12=21>>
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            FpMonoid:monoid of which this element is a member
+#
+#        Raises:
+#            None.
+#        '''
+#        return self._FpS
+#
+#    def __repr__(self):
+#        '''
+#        displays the FpMonoid element
+#
+#        Examples:
+#            >>> FpM=FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
+#            >>> FpMonoidElement(FpM,"a")
+#            <FpMonoid Element 'a'>
+#            >>> FpMonoidElement(FpM,"ab")
+#            <FpMonoid Element 'ab'>
+#            >>> FpM=FpMonoid([1,2],[[[1,1],[1]],[[2,2,2],[2]],[[1,2],[2,1]]])
+#            >>> FpMonoidElement(FpM,[1])
+#            <FpMonoid Element '[1]'>
+#            >>> FpMonoidElement(FpM,[1,2])
+#            <FpMonoid Element '[1, 2]'>
+#
+#        Args:
+#            None.
+#
+#        Returns:
+#            str: "<FpSemigroup Element 'word'>"
+#
+#        Raises:
+#            None.
+#        '''
+#        return "<FpMonoid Element " + str(self._Word)[1:] + ">"
+#
