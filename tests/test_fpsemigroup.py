@@ -87,7 +87,8 @@ class TestFpSemigroup(unittest.TestCase):
     def test_size_int(self):
         S = FpSemigroup([0], [[[0], [0, 0]]])
         self.assertEqual(S.size(), 1)
-        S = FpSemigroup([0, 1], [[[0], [0, 0]], [[1], [1, 1]], [[0, 1], [1, 0]]])
+        S = FpSemigroup([0, 1],
+                        [[[0], [0, 0]], [[1], [1, 1]], [[0, 1], [1, 0]]])
         self.assertEqual(S.size(), 3)
 
     def test_word_to_class_index_str(self):

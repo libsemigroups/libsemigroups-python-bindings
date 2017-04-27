@@ -1,0 +1,35 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-5
+    - g++-5
+
+before_install:
+  - sudo add-apt-repository ppa:dns/gnu -y
+  - sudo apt-get update -q
+  - sudo apt-get install --only-upgrade autoconf
+  - pip install cython
+  - git clone --depth=1 https://github.com/james-d-mitchell/libsemigroups.git
+  - export CXX="g++-5" CC="gcc-5"
+  - export LD_LIBRARY_PATH=/usr/local/lib
+  - cd libsemigroups/ ; mkdir -p m4
+  - ./autogen.sh; ./configure; make; sudo make install
+  - cd ..
+
+install:
+  - python -m pip install .
+
+script:
+  - python -m unittest discover
