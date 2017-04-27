@@ -21,7 +21,7 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    version="0.2.2",
+    version="0.0.1",
     name="libsemigroups-python-bindings",
     description='Python bindings for the libsemigroups mathematics library',
     long_description=long_description,

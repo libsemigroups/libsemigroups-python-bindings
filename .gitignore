@@ -2,3 +2,5 @@ semigroups.cpp
 *.so
 build
 *.egg-info
+htmlcov
+*.pyc

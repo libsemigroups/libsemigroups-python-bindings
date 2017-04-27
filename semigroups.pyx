@@ -106,7 +106,7 @@ cdef class Element:# Add identity
             raise ValueError('Element degrees must be equal')
         product.redefine(self._handle, other._handle)
         return self.new_from_handle(product)
-	
+  
     def __pow__(self, power, modulo):#It works, but don't understand why it needs 'modulo' argument aal20
         """
         Function for multiplying an element by itself a number of times.
@@ -142,7 +142,7 @@ cdef class Element:# Add identity
             powerOf2List.append(powerOf2List[-1].__mul__(powerOf2List[-1]))
         output = self 
 
-	#generates answer using element to the power of powers of 2 (binary tells you which ones to multiply)
+  #generates answer using element to the power of powers of 2 (binary tells you which ones to multiply)
         for i in range(len(binaryString)):
             if binaryString[i] == "1":
                  output = output.__mul__(powerOf2List[i])
@@ -371,10 +371,12 @@ cdef class PartialPerm(Element):
                 return
             self._handle = new cpp.PartialPerm[uint16_t](list(args)[0])
         else:
-            if not isinstance(args[0], list):
-                raise TypeError('Domain must be a list')
-            if not isinstance(args[1], list):
-                raise TypeError('Range must be a list')
+            if not (isinstance(args[0], list) 
+                    and all(isinstance(x, int) for x in args[0])):
+                raise TypeError('Domain must be a list of integers')
+            if not (isinstance(args[1], list) 
+                    and all(isinstance(x, int) for x in args[1])):
+                raise TypeError('Range must be a list of integers')
             if not isinstance(args[2], int):
                 raise TypeError('Degree must be an int')
 
@@ -385,9 +387,9 @@ cdef class PartialPerm(Element):
             if len(self._domain) != len(self._range):
                 raise ValueError('Domain and range must be same size')
             if len(self._domain) != 0:
-                if max(max(self._domain),max(self._range)) >= _degree:
-                    raise ValueError('The max of the domain and range must \
-                    be strictly less than the degree')
+                if max(max(self._domain), max(self._range)) >= _degree:
+                    raise ValueError('The max of the domain and range must ' 
+                                     + 'be strictly less than the degree')
 
             n = len(self._domain)
             imglist = [65535] * _degree
@@ -441,8 +443,8 @@ cdef class PartialPerm(Element):
 
         Example:
             >>> from semigroups import PartialPerm
-	        >>> PartialPerm([1, 4, 2], [2, 3, 4], 6)
-	        PartialPerm([1, 4, 2], [2, 3, 4], 6)
+          >>> PartialPerm([1, 4, 2], [2, 3, 4], 6)
+          PartialPerm([1, 4, 2], [2, 3, 4], 6)
         """
 
         self._init_dom_ran()
@@ -1326,17 +1328,9 @@ cdef class FpSemigroup(Semigroup):
 
     cdef vector[pair[vector[size_t],vector[size_t]]] _relations
 
-    #a vector of relations used to define a congruence
-    cdef vector[pair[vector[size_t],vector[size_t]]] _extra
-
     #a boolean which is true when string notation is used for words 
     #and false when integer notation is used for words
     cdef bool _is_string_alphabet
-
-    cdef size_t _size 
-    
-    #a string containing "twosided" which is used to define a congruence
-    cdef string _cong
 
     def __init__(self, alphabet, rels):
         '''
@@ -1365,11 +1359,9 @@ cdef class FpSemigroup(Semigroup):
         '''
         if not isinstance(alphabet,list):
             raise TypeError("alphabet should be a list")
-        self._size = len(alphabet)
-        self._cong = "twosided"
         
         # Checks if semigroup is empty.
-        if self._size > 0:
+        if len(alphabet) > 0:
             if not(isinstance(alphabet[0],int) or isinstance(alphabet[0],str)):
                 raise TypeError("alphabet should contain characters or ints")
             self._is_string_alphabet = isinstance(alphabet[0],str)
@@ -1402,6 +1394,7 @@ cdef class FpSemigroup(Semigroup):
                                 raise ValueError("elements referenced in "+
                                   "relations should be in the given alphabet")
                             rels[i][j][k]=alphabet.index(rels[i][j][k])
+                self._alphabet = [i.encode('UTF-8') for i in alphabet]
             else:
                 for i in xrange(len(rels)):
                     if not isinstance(rels[i],list):
@@ -1422,6 +1415,7 @@ cdef class FpSemigroup(Semigroup):
                                 raise ValueError("elements referenced in"+
                                 " relations should be in the given alphabet")
                             rels[i][j][k]=alphabet.index(rels[i][j][k])
+                self._alphabet = [str(i).encode('UTF-8') for i in alphabet]
         else:
             #Checks that not attempting to define relations on empty semigroup.
             if not len(rels)==0: 
@@ -1430,15 +1424,12 @@ cdef class FpSemigroup(Semigroup):
             self._is_string_alphabet = True
 
         #stores alphabet as a c string vector(even if input is integer vector)
-        self._alphabet = [str(i).encode('UTF-8')for i in alphabet]
         self._relations = rels
-        self._extra = rels 
 
-        cdef vector[pair[vector[size_t], vector[size_t]]] cpp_rels = rels
-        self._congruence = new cpp.Congruence(self._cong,
-                                              len(alphabet) + 1,
+        self._congruence = new cpp.Congruence("twosided",
+                                              len(alphabet),
                                               [],
-                                              cpp_rels)
+                                              rels)
 
     #TODO write == method for FpSemigroup
     def size(self):
@@ -1564,9 +1555,9 @@ cdef class FpSemigroup(Semigroup):
             None.
         '''
         if self._is_string_alphabet:
-            return [str(i)[2:-1]for i in self._alphabet]
+            return [letter.decode("utf-8") for letter in self._alphabet]
         else:
-            return [int(i)for i in self._alphabet]
+            return [int(i) for i in self._alphabet]
 
     def is_confluent(self):
         '''
@@ -1592,7 +1583,7 @@ cdef class FpSemigroup(Semigroup):
         self._rws = new cpp.RWS(self._relations)
         return self._rws.is_confluent()
 
-    def word_to_class_index(self,word):
+    def word_to_class_index(self, word):
         '''
         returns the class index of a given word
 
@@ -1634,56 +1625,13 @@ cdef class FpSemigroup(Semigroup):
 
         return self._congruence.word_to_class_index(word)
 
-
     def __dealloc__(self):
-        '''
-        deletes c objects when semigroup is deleted
-
-        Examples:
-            None.
-
-        Args:
-            None.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-        '''
         del self._congruence
         del self._rws
 
     def __repr__(self):
-        '''
-        displays the FpSemigroup via it's generators and relations
-        (or the number of them if ouput would be too long)
-
-        Examples:
-        >>> FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
-        <Fpsemigroup <a,b|aa=a,bbb=ab,ab=ba>>
-        >>> FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[1,2]],[[1,2],[2,1]]])
-        <Fpsemigroup <1,2|11=1,222=12,12=21>>
-
-        Args:
-            None.
-
-        Returns:
-            str: <FpSemigroup with 'generators'|'relations'>>
-
-        Raises:
-            None.
-        '''
-        repalphabet = ','.join([str(j)[2:-1]for j in self._alphabet])
-        reprelations=','.join([''.join([str(self._alphabet[j])[2:-1]
-         for j in i.first]+["="]+[str(self._alphabet[j])[2:-1]
-         for j in i.second])for i in self._relations])
-        rep="<FpSemigroup <" + repalphabet + "|" + reprelations + ">>"
-        if len(rep)<80:
-            return rep
-        else:
-            return "<FpSemigroup with " + str(len(self._alphabet)) + \
-            " generators and " + str(len(self._relations)) + " relations>"
+        return ("<fp semigroup with %s generators and %s relations>" 
+                % (str(len(self._alphabet)), str(len(self._relations))))
 
 cdef class FpMonoid(FpSemigroup):
     """FpMonoid Object
@@ -1695,8 +1643,8 @@ cdef class FpMonoid(FpSemigroup):
     <FpMonoid <1,2|11=1,222=12,12=21>>
 
     """    
-    cdef vector[pair[vector[size_t],vector[size_t]]] _e_relations
 
+    cdef vector[pair[vector[size_t],vector[size_t]]] _e_relations
     cdef vector[string] _e_alphabet
 
     def __init__(self, alphabet, rels):
@@ -1725,13 +1673,11 @@ cdef class FpMonoid(FpSemigroup):
             contain 2 elements or any of the words in relations use generators
             not in the given alphabet.
         '''
-        if not isinstance(alphabet,list):
+        if not isinstance(alphabet, list):
             raise TypeError("alphabet should be a list")
-        self._size = len(alphabet)
-        self._cong = "twosided"
         
         # Checks if monoid is trivial.
-        if self._size > 0:
+        if len(alphabet) > 0:
             if not (isinstance(alphabet[0],int) or 
             isinstance(alphabet[0],str)):
                 raise TypeError("alphabet should contain"+
@@ -1766,6 +1712,7 @@ cdef class FpMonoid(FpSemigroup):
                                 raise ValueError("elements referenced in "+
                                 "relations should be in the given alphabet")
                             rels[i][j][k]=(['e']+alphabet).index(rels[i][j][k])
+                self._alphabet = [i.encode('UTF-8') for i in alphabet]
             else:
                 if 0 in alphabet:
                     raise ValueError("alphabet can't contain 0 as this"+
@@ -1789,6 +1736,7 @@ cdef class FpMonoid(FpSemigroup):
                                 raise ValueError("elements referenced in "+
                                 "relations should be in the given alphabet")
                             rels[i][j][k]=([0]+alphabet).index(rels[i][j][k])
+                self._alphabet = [str(i).encode('UTF-8') for i in alphabet]
         else:
             # Checks that not attempting to define relations on trivial monoid.
             if not len(rels)==0:
@@ -1796,28 +1744,27 @@ cdef class FpMonoid(FpSemigroup):
             self._is_string_alphabet = True
 
         #stores alphabet as a c string vector(even if input is integer vector)
-        self._alphabet = [str(i).encode('UTF-8')for i in alphabet]
         self._relations = rels
-        self._extra = rels
 
         if self._is_string_alphabet:
-            self._e_alphabet = [str(i).encode('UTF-8')for i in ['e']+alphabet]
+            self._e_alphabet = [i.encode('UTF-8') for i in ['e'] + alphabet]
         else:
-            self._e_alphabet = [str(i).encode('UTF-8')for i in [0]+alphabet]
+            self._e_alphabet = [str(i).encode('UTF-8') for i in [0] + alphabet]
 
-        lefteq = [[[i+1,0],[i+1]]for i in xrange(self._size)]
-        righteq = [[[0,i+1],[i+1]]for i in xrange(self._size)]
+        lefteq = [[[i+1,0],[i+1]]for i in xrange(len(alphabet))]
+        righteq = [[[0,i+1],[i+1]]for i in xrange(len(alphabet))]
 
         self._e_relations = rels + [[[0,0],[0]]] + lefteq + righteq
-        self._congruence = new cpp.Congruence(self._cong, 
-                                              self._size + 1,
-                                              #TODO why the + 1??
-                                              self._e_relations, 
-                                              self._extra)
+        self._congruence = new cpp.Congruence("twosided", 
+                                              len(alphabet) + 1,
+                                              [],
+                                              self._e_relations)
 
+    # FIXME this should return the alphabet without the identity
     def alphabet(self):
         '''
-        returns the alphabet of the FpMonoid(including the identity which is represented as 0 or 'e').
+        Returns the alphabet of the finitely presented monoid
+        (including the empty word).
 
         Examples:
             >>> FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]]).alphabet()
@@ -1835,42 +1782,13 @@ cdef class FpMonoid(FpSemigroup):
             None.
         '''
         if self._is_string_alphabet:
-            return [str(i)[2:-1]for i in self._e_alphabet]
+            return [letter.decode("utf-8") for letter in self._e_alphabet]
         else:
-            return [int(i)for i in self._e_alphabet]
+            return [int(i) for i in self._e_alphabet]
 
     def __repr__(self):
-        '''
-        displays the FpMonoid via it's generators and relations
-        (or the number of them if ouput would be too long)
-
-        Examples:
-            >>> FpMonoid(["a","b"],[["aa","a"],["bbb","ab"],["ab","ba"]])
-            <FpMonoid <a,b|aa=a,bbb=ab,ab=ba>>
-            >>> FpMonoid([1,2],[[[1,1],[1]],[[2,2,2],[1,2]],[[1,2],[2,1]]])
-            <FpMonoid <1,2|11=1,222=12,12=21>>
-
-        Args:
-            None.
-
-        Returns:
-            str: <FpMonoid with 'generators'|'relations'>>
-
-        Raises:
-            None.
-        '''
-        repalphabet = ','.join([str(j)[2:-1]for j in self._alphabet])
-        reprelations=','.join(
-                    [''.join([str(self._e_alphabet[j])[2:-1]for j in i.first]+
-                    ["="]+[str(self._e_alphabet[j])[2:-1]for j in i.second])
-                    for i in self._relations])
-
-        rep="<FpMonoid <" + repalphabet + "|" + reprelations + ">>"
-        if len(rep)<80:
-            return rep
-        else:
-            return "<FpMonoid with %s generators and %s relations>"%(
-                    `len(self._alphabet)`,`len(self._relations)`)
+            return ("<fp monoid with %s generators and %s relations>" 
+                    % (str(len(self._alphabet)), str(len(self._relations))))
 
 cdef class FpSemigroupElement(Element):
     """FpSemigroupElement Object
@@ -1971,134 +1889,40 @@ cdef class FpSemigroupElement(Element):
             >>> FpSemigroupElement(FpS,[1]).word()
             [1]
 
-        Args:
-            None.
-
         Returns:
             string/list:word representing the element as a string or list.
-
-        Raises:
-            None.
         '''
         if self._FpS._is_string_alphabet:
-            return str(self._Word)[2:-1]
+            return str(self._Word.decode('utf-8'))
         else:
             return eval(self._Word)
-        
 
     def __mul__(self, other):
-        '''
-        multiplies 2 FpSemigroup elements(self on left, other on right).
-
-        Examples:
-            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
-                                                     ,["ab","ba"]])
-            >>> FpSemigroupElement(FpS,"a")*FpSemigroupElement(FpS,"a")
-            0
-            >>> FpSemigroupElement(FpS,"a")*FpSemigroupElement(FpS,"ab")
-            1
-            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[2]]
-                                                  ,[[1,2],[2,1]]])
-            >>> FpSemigroupElement(FpS,[1])*FpSemigroupElement(FpS,[1])
-            0
-            >>> FpSemigroupElement(FpS,[1])*FpSemigroupElement(FpS,[1,2])
-            1
-
-        Args:
-            other (FpSemigroupElement):element to be multiplied by on the right
-
-        Returns:
-            int:class index of the solution to the multiplication
-
-        Raises:
-            None.
-        '''
-        if not (isinstance(other,FpSemigroupElement) and 
+        if not (isinstance(other, FpSemigroupElement) and 
                 self.semigroup() is other.semigroup()):
             raise TypeError("given words are not members"+
                             " of the same FpSemigroup")
-        if isinstance(self.semigroup(),FpMonoid):
-            return self.semigroup().word_to_class_index(FpMonoidElement(
-                            self.semigroup(),self.word() + other.word()))
+        if isinstance(self.semigroup(), FpMonoid):
+            return FpMonoidElement(self.semigroup(), 
+                                   self.word() + other.word())
         else:
-            return self.semigroup().word_to_class_index(FpSemigroupElement(
-                            self.semigroup(),self.word() + other.word()))
+            return FpSemigroupElement(self.semigroup(), 
+                                      self.word() + other.word())
 
     def word_to_class_index(self):
         '''
         returns the class index of self
 
-        Examples:
-        >>> FpMonoid(["a","b"],[["aa","a"],["bbb","b"],["ab","ba"]])
-        <FpMonoid <a,b|aa=a,bbb=b,ab=ba>>
-        >>> E=FpMonoidElement(_,"")
-        >>> E.word_to_class_index()
-        0
-        >>> A=FpMonoidElement(E.monoid(),"a")
-        >>> A.word_to_class_index()
-        1
-        >>> B=FpMonoidElement(E.monoid(),"b")
-        >>> B.word_to_class_index()
-        2
-
-        Args:
-            None.
-
         Returns:
             int: class index of self.
-
-        Raises:
-            None.
-
         '''
 
         return self.semigroup().word_to_class_index(self)
 
     def __repr__(self):
-        '''
-        displays the FpSemigroup element
-
-        Examples:
-            >>> FpS=FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"]
-                                                     ,["ab","ba"]])
-            >>> FpSemigroupElement(FpS,"a")
-            <FpSemigroup Element 'a'>
-            >>> FpSemigroupElement(FpS,"ab")
-            <FpSemigroup Element 'ab'>
-            >>> FpS=FpSemigroup([1,2],[[[1,1],[1]],[[2,2,2],[2]]
-                                                  ,[[1,2],[2,1]]])
-            >>> FpSemigroupElement(FpS,[1])
-            <FpSemigroup Element '[1]'>
-            >>> FpSemigroupElement(FpS,[1,2])
-            <FpSemigroup Element '[1, 2]'>
-
-        Args:
-            None.
-
-        Returns:
-            str: "<FpSemigroup Element 'word'>"
-
-        Raises:
-            None.
-        '''
-        return "<FpSemigroup Element " + str(self._Word)[1:] + ">"
+        return "<FpSemigroup Element " + self._Word.decode('utf-8') + ">"
 
     def __dealloc__(self):
-        '''
-        deletes c objects when FpSemigroup element is deleted
-
-        Examples:
-            None.
-
-        Args:
-            None.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-        '''
         del self._handle
 
 cdef class FpMonoidElement(FpSemigroupElement):
@@ -2116,7 +1940,6 @@ cdef class FpMonoidElement(FpSemigroupElement):
     >>> FpMonoidElement(FpM,[2,1,2])
     <FpMonoid Element '[2, 1, 2]'>
     """ 
-
 
     def __init__(self,FpM,word):
         '''
@@ -2212,5 +2035,5 @@ cdef class FpMonoidElement(FpSemigroupElement):
         Raises:
             None.
         '''
-        return "<FpMonoid Element " + str(self._Word)[1:] + ">"
+        return "<FpMonoid Element " + self._Word.decode("utf-8") + ">"
 
