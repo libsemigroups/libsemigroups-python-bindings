@@ -79,8 +79,9 @@ class TestFpSemigroup(unittest.TestCase):
 
     def test_size_str(self):
         self.assertEqual(FpSemigroup(["a"], [["a", "aa"]]).size(),1)
-        self.assertEqual(FpSemigroup(["a","b"], [["a", "aa"],['b','bb'],\
-        ['ab','ba']]).size(),3)
+        self.assertEqual(FpSemigroup(["a","b"],
+                                     [["a", "aa"],['b','bb'],
+                                      ['ab','ba']]).size(), 3)
 
     def test_size_int(self):
         self.assertEqual(FpSemigroup([0], [[[0], [0,0]]]).size(),1)
@@ -223,7 +224,8 @@ class TestFpSemigroupElement(unittest.TestCase):
                                     [[1,2],[2,1]]]),[])
         self.assertEqual(E.word_to_class_index(),0)
         A=FpMonoidElement(E.monoid(),[1])
-        self.assertEqual(A.word_to_class_index(),1)
+        AA = FpMonoidElement(E.monoid(), [1, 1])
+        self.assertEqual(A.word_to_class_index(), AA.word_to_class_index())
         B=FpMonoidElement(E.monoid(),[2])
         self.assertEqual(B.word_to_class_index(),2)
 
