@@ -12,21 +12,21 @@ from Cython.Build import cythonize
 
 here = path.abspath(path.dirname(__file__))
 
-extra_compile_args = ["-std=c++11"]
+extra_compile_args = ['-std=c++11']
 if platform == 'darwin':
-    extra_compile_args.append("-mmacosx-version-min=10.9")
+    extra_compile_args.append('-mmacosx-version-min=10.9')
 
 # Get the long description from the README file
 with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    version="0.0.1",
-    name="libsemigroups-python-bindings",
+    install_requires=['cysignals'],
+    version='0.0.1',
+    name='semigroups',
     description='Python bindings for the libsemigroups mathematics library',
     long_description=long_description,
-    url=('https://github.com/james-d-mitchell/libsemigroups/' +
-         'tree/master/python-bindings'),
+    url=('https://github.com/james-d-mitchell/libsemigroups-python-bindings'),
     author='James Mitchell and Nicolas M. Thiéry',
     author_email='TODO',
     license='GPLv3',
@@ -40,15 +40,17 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     keywords='Mathematics, semigroup theory',
+    packages=['semigroups'],
 
     ext_modules=cythonize([
-        Extension("semigroups",
-                  sources=["semigroups.pyx", "semigroups_cpp.cpp"],
-                  depends=["semigroups_cpp.h", "semigroups_cpp.pxd"],
-                  libraries=["semigroups"],
-                  language="c++",             # generate C++ code
-                  extra_compile_args=extra_compile_args
-                 )]),
+        Extension('libsemigroups',
+                  sources=['semigroups/libsemigroups.pyx',
+                           'semigroups/libsemigroups_cpp.cpp'],
+                  depends=['semigroups/libsemigroups.pxd',
+                           'semigroups/libsemigroups_cpp.h'],
+                  libraries=['semigroups'],
+                  language='c++',             # generate C++ code
+                  extra_compile_args=extra_compile_args)]),
 
     # setup_requires=['pytest-runner', 'pytest-cython'], # temporarilly
     # disabled to build conda package

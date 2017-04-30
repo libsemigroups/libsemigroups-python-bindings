@@ -1,4 +1,4 @@
-#include "semigroups_cpp.h"
+#include "libsemigroups_cpp.h"
 #include <Python.h>
 
 namespace libsemigroups {};

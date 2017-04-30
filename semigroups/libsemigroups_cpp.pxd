@@ -54,7 +54,7 @@ cdef extern from "<libsemigroups/elements.h>" namespace "libsemigroups":
         vector[vector[uint32_t]].iterator begin()
         vector[vector[uint32_t]].iterator end()
 
-cdef extern from "semigroups_cpp.h" namespace "libsemigroups":
+cdef extern from "libsemigroups_cpp.h" namespace "libsemigroups":
     cdef cppclass PythonElement(Element):
         object get_value()
         PythonElement(value) except +

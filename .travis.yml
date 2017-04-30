@@ -21,6 +21,7 @@ before_install:
   - sudo apt-get update -q
   - sudo apt-get install --only-upgrade autoconf
   - pip install cython
+  - pip install cysignals
   - git clone --depth=1 https://github.com/james-d-mitchell/libsemigroups.git
   - export CXX="g++-5" CC="gcc-5"
   - export LD_LIBRARY_PATH=/usr/local/lib
