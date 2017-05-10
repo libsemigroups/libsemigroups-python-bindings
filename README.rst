@@ -28,10 +28,6 @@ Activate the `conda-forge <https://conda-forge.github.io/>`_ package repository:
 
     conda config --add channels conda-forge
 
-Install the C++ library (headers, static and shared library)::
-
-    conda install libsemigroups
-
 Install the Python bindings::
 
     conda install libsemigroups-python-bindings
