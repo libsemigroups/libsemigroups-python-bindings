@@ -447,19 +447,15 @@ class Bipartition(Element):
             [[1, 2], [-2, -1, 3], [-3]]
         '''
         if self._blocks is None:
-            blocks = []
+            blocks = [[] for i in range(self.nr_blocks())]
             n = self.degree()
             for i in range(1, n + 1):
                 val = self.block(i)
-                if val >= len(blocks):
-                    blocks.append([])
-                    assert val < len(blocks)
+                assert val < len(blocks)
                 blocks[val].append(i)
             for i in range(-1, - n - 1, -1):
                 val = self.block(i)
-                if val >= len(blocks):
-                    blocks.append([])
-                    assert val < len(blocks)
+                assert val < len(blocks)
                 blocks[val].append(i)
             self._blocks = blocks
         return self._blocks

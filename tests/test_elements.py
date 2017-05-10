@@ -102,7 +102,7 @@ class TestBipartition(unittest.TestCase):
         with self.assertRaises(NameError):
             B
 
-    def test_blocks(self):
+    def test_blocks1(self):
         self.assertEqual(Bipartition([1, 2], [-2, -1]).blocks(),
                          [[1, 2], [-1, -2]])
         self.assertEqual(Bipartition([-7, -6, -5, -4], [3, 2, 1],
@@ -114,6 +114,12 @@ class TestBipartition(unittest.TestCase):
 
         x = Bipartition([-1, -2], [2, -3], [1, 3])
         self.assertEqual((x * x).blocks(), [[1, 3], [2, -3], [-1, -2]])
+
+    def test_blocks2(self):
+        x = Bipartition([1, 2], [-2, -1, 3], [-3])
+        self.assertEqual(x.blocks(), [[1, 2], [3, -1, -2], [-3]])
+        self.assertEqual((x * x.identity()).blocks(),
+                         [[1, 2], [3, -1, -2], [-3]])
 
     def test_nr_blocks(self):
         self.assertEqual(Bipartition([1, 2], [-2, -1]).nr_blocks(), 2)
