@@ -175,7 +175,7 @@ class PartialPerm(Element):
     [(0)f, (1)f, ..., (n - 1)f] where the value -1 is used to indicate i(f) is
     undefined.
 
-    Args: Can pass either of the following
+    Args:
         args (list):    Image list of the partial permutation when applied to
                         [0, 1, ..., n], -1 being used to indicate the image is
                         undefined.
@@ -326,14 +326,13 @@ class PartialPerm(Element):
 
 
 class Bipartition(Element):
-    '''
-    A class for handles to libsemigroups bipartition.
+    '''A class for bipartitions.
 
-    A bipartition is a partition of the set {-n, ..., -1} union {1, ..., n}
+    A bipartition is a partition of the set :math:`\{-n, ..., -1, 1, ..., n\}`
     for some integer n. This can be stored as a list of blocks, the subsets
     of the bipartition
 
-    Args: Can pass either of the following
+    Args:
         args (lists):   The blocks of the bipartition as lists.
 
     Raises:
@@ -528,7 +527,7 @@ class BooleanMat(Element):
 
     A boolean matrix is a matrix with entries either True or False.
 
-    Args: Can pass either of the following
+    Args:
         args (lists):   The rows of the matrix as lists.
 
     Raises:
@@ -637,7 +636,7 @@ class PBR(Element):
     elements are adjacent to some other elements, but a adjacent to b need not
     imply b adjacent to a.
 
-    Args: Can pass either of the following
+    Args:
         args (lists):   The adjacencies of the negative elements as a list of
                         lists followed by the positive elements as a list of
                         lists

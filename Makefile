@@ -22,4 +22,11 @@ lint:
 	flake8 semigroups/*.py 
 	flake8  tests/test_*.py
 
+doc: 
+	cd docs ; make html; cd ..
+	@echo "See: docs/_build/html/index.html" 
+
+doc-clean: 
+	cd docs ; make clean; cd ..
+
 .PHONY: coverage tests lint

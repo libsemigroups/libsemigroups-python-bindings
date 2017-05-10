@@ -12,12 +12,10 @@ class Semigroup(libsemigroups.CySemigroup):
     '''
     A class for handles to libsemigroups semigroups
 
-    EXAMPLES:
-
-    We construct the symmetric group::
-
+    Examples:
         >>> from semigroups import Semigroup, Transformation
-        >>> S = Semigroup(Transformation([1,2,0]),Transformation([2,1,0]))
+        >>> S = Semigroup(Transformation([1, 2, 0]), Transformation([2, 1, 0]))
+        >>> # the symmetric group
         >>> S.size()
         6
     '''

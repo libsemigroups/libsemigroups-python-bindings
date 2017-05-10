@@ -3,7 +3,19 @@ import libsemigroups
 
 class FpSemigroup(libsemigroups.FpSemigroupNC):
     '''
-    Class for finitely presented semigroups
+    A class for finitely presented semigroups.
+
+    Args:
+        alphabet (list): the generators of the finitely presented semigroup,
+            must be a list of strings of length 1.
+
+        rels (list): the relations containing pairs of string which are
+            equivalent in the finitely presented semigroup
+
+    Raises:
+        TypeError: if TODO
+
+        ValueError: if TODO
 
     Examples:
         >>> FpSemigroup(['a', 'b'],
@@ -29,27 +41,6 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
                                  % self.alphabet)
 
     def __init__(self, alphabet, rels):
-        '''
-        Construct an FpSemigroup from generators and relations.
-
-        Args:
-            alphabet (list): the generators of the fp semigroup, must be
-            either a list of ints or a list of strings of length 1.
-
-            rels (list): the relations containing pairs of words which are
-            equivalent in the given FpSemigroup, must be a list of length 2
-            lists of lists of ints or a list of length 2 lists of strings.
-
-        Raises:
-            TypeError: If the alphabet is not a list of integers or strings,
-            if the relations are not a double nested list of integers or a
-            nested list strings.
-
-            ValueError: If the alphabet contains repeated elements, if any of
-            the lists which are supposed to contain pairs of words don't
-            contain 2 elements or any of the words in relations use generators
-            not in the given alphabet.
-        '''
         # Check the alphabet
         if not isinstance(alphabet, list):
             raise TypeError('the first argument (alphabet) must be a list')
@@ -87,31 +78,31 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
                 % (len(self.alphabet), len(self.relations)))
 
     def size(self):
-        '''
-        Compute the size of a finitely presented semigroup.
-
-        Examples:
-            >>> FpSemigroup(['a','b'],[['aa','a'],['bbb','ab'],
-            ...                                 ['ab','ba']]).size()
-            5
-            >>> FpMonoid(['a','b'],[['aa','a'],['bbb','ab'],
-            ...                                      ['ab','ba']]).size()
-            6
-            >>> FpMonoid(['a','b'],[['aa','a'],['bbb','ab'],
-            ...                                      ['ab','ba']]).size()
-            6
+        '''Attempt to compute the size of the finitely presented semigroup.
 
         Returns:
-            int: The size of the FpSemigroup.
+            int: the size of the finitely presented semigroup.
 
+        Examples:
+            >>> FpSemigroup(['a', 'b'],
+            ...             [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']]).size()
+            5
+            >>> FpMonoid(['a', 'b'],
+            ...          [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']]).size()
+            6
+            >>> FpMonoid(['a', 'b'],
+            ...          [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']]).size()
+            6
         '''
         if not self.is_finite():
             return float('inf')
         return libsemigroups.FpSemigroupNC.size(self)
 
     def is_finite(self):
-        '''
-        Attempts to check if a finitely presented semigroup is finite.
+        '''Attempts to check if a finitely presented semigroup is finite.
+
+        Returns:
+            bool: ``True`` if finite, ``False`` otherwise.
 
         Examples:
             >>> S = FpSemigroup(['a', 'b'],
@@ -120,9 +111,6 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
             True
             >>> FpSemigroup(['a', 'b'], []).is_finite()
             False
-
-        Returns:
-            bool: True for finite, False otherwise.
         '''
         # Check if number of generators exceeds number of relations
         if len(self.relations) < len(self.alphabet):
@@ -144,28 +132,27 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
                 isinstance(libsemigroups.FpSemigroupNC.size(self), long))
 
     def word_to_class_index(self, word):
-        '''
-        returns the class index of a given word
-
-        Examples:
-        >>> FpS=FpSemigroup(['a', 'b'],
-        ...                 [['aa', 'a'], ['bab', 'ab'], ['ab', 'ba']])
-        >>> FpS.word_to_class_index('a')
-        0
-        >>> FpS.word_to_class_index('b')
-        1
+        '''Returns the class index of a given word.
 
         Args:
-            FpSemigroupElement:word whose class index is to be returned.
+            word (str): word whose class index is to be returned.
 
         Returns:
             int: class index of the given word.
 
         Raises:
-            TypeError: if 1st argument is not an FpSemigroupElement.
-            ValueError: if 1st argument is an FpSemigroupElement
-            but not in this semigroup.
+            TypeError: if TODO
+            ValueError: if TODO
+
+        Examples:
+            >>> S = FpSemigroup(['a', 'b'],
+            ...                 [['aa', 'a'], ['bab', 'ab'], ['ab', 'ba']])
+            >>> S.word_to_class_index('a')
+            0
+            >>> S.word_to_class_index('b')
+            1
         '''
+
         self.__check_word(word)
         return libsemigroups.FpSemigroupNC.word_to_class_index(self, word)
 
