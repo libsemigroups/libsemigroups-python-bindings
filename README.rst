@@ -2,9 +2,10 @@ Python bindings for libsemigroups
 =================================
 
 This is a basic package providing python bindings for the `libsemigroups
-<https://james-d-mitchell.github.io/libsemigroups/>`_. 
+<https://james-d-mitchell.github.io/libsemigroups/>`_  C++ library.
 
-libsemigroups is a C++ library for semigroups and monoids; it is partly based on 
+`libsemigroups
+<https://james-d-mitchell.github.io/libsemigroups/>`_ is a C++ library for semigroups and monoids; it is partly based on 
 `Algorithms for computing finite semigroups <https://www.irif.fr/~jep/PDF/Rio.pdf>`_, 
 `Expository Slides <https://www.irif.fr/~jep/PDF/Exposes/StAndrews.pdf>`_, and 
 `Semigroupe 2.01
