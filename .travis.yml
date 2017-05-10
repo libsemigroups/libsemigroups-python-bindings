@@ -22,6 +22,7 @@ before_install:
   - sudo apt-get install --only-upgrade autoconf
   - pip install cython
   - pip install cysignals
+  - pip install nose
   - git clone --depth=1 https://github.com/james-d-mitchell/libsemigroups.git
   - export CXX="g++-5" CC="gcc-5"
   - export LD_LIBRARY_PATH=/usr/local/lib
@@ -33,4 +34,4 @@ install:
   - python -m pip install .
 
 script:
-  - python -m unittest discover
+  - python -m nose --with-doctest
