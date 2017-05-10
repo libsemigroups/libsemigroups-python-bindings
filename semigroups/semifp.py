@@ -20,6 +20,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
     Examples:
         >>> FpSemigroup(['a', 'b'],
         ...             [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']])
+        <fp semigroup with 2 generators and 3 relations>
 
     TODO:
          write == method
@@ -146,7 +147,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
 
         Examples:
             >>> S = FpSemigroup(['a', 'b'],
-            ...                 [['aa', 'a'], ['bab', 'ab'], ['ab', 'ba']])
+            ...                 [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']])
             >>> S.word_to_class_index('a')
             0
             >>> S.word_to_class_index('b')

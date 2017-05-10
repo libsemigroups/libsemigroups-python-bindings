@@ -1,13 +1,13 @@
 pip-install:
-	pip3 install --user . --upgrade
 	pip install --user . --upgrade
+	pip3 install --user . --upgrade
 
 clean:
 	rm -f tests/*.pyc *.pyc
 
 tests:
-	python3 -m unittest discover
-	python -m unittest discover
+	python2.7 -m nose --with-doctest
+	python3.6 -m nose --with-doctest
 	
 coverage: pip-install
 	coverage run -m unittest discover

@@ -343,7 +343,7 @@ class Bipartition(Element):
     Example:
         >>> from semigroups import Bipartition
         >>> Bipartition([1, -1], [2, 3, -2], [-3])
-        Bipartition([1, -1], [2, 3, -2], [-3])
+        Bipartition([[1, -1], [2, 3, -2], [-3]])
     '''
 
     def __init__(self, *args):
@@ -444,7 +444,7 @@ class Bipartition(Element):
         Example:
             >>> from semigroups import Bipartition
             >>> Bipartition([1, 2], [-2, -1, 3], [-3]).blocks()
-            [[1, 2], [-2, -1, 3], [-3]]
+            [[1, 2], [3, -1, -2], [-3]]
         '''
         if self._blocks is None:
             blocks = [[] for i in range(self.nr_blocks())]
@@ -475,7 +475,7 @@ class Bipartition(Element):
 
         Example:
             >>> from semigroups import Bipartition
-            >>> Bipartition([1, 2], [-2, -1, 3], [-3]).numberOfBlocks()
+            >>> Bipartition([1, 2], [-2, -1, 3], [-3]).nr_blocks()
             3
         '''
         if self._blocks is not None:
@@ -503,7 +503,7 @@ class Bipartition(Element):
 
         Example:
             >>> from semigroups import Bipartition
-            >>> Bipartition([1, 2], [-2, -1, 3], [-3]).isTransverseBlock(1)
+            >>> Bipartition([1, 2], [-2, -1, 3], [-3]).is_transverse_block(1)
             True
         '''
         if not isinstance(index, int):
@@ -535,7 +535,7 @@ class BooleanMat(Element):
     Example:
         >>> from semigroups import BooleanMat
         >>> BooleanMat([True, True], [False, True])
-        BooleanMat([1, 1], [0, 1])
+        BooleanMat([[1, 1], [0, 1]])
     '''
 
     def __init__(self, *args):
@@ -617,7 +617,7 @@ class BooleanMat(Element):
         Example:
             >>> from semigroups import BooleanMat
             >>> BooleanMat([1, 1], [0, 0])
-            BooleanMat([1, 1], [0, 0])
+            BooleanMat([[1, 1], [0, 0]])
         '''
 
         return ('BooleanMat(%s)'
@@ -649,7 +649,7 @@ class PBR(Element):
     Example:
         >>> from semigroups import PBR
         >>> PBR([[1], [1, 2, -1]], [[1], [2, -1, 1]])
-        PBR([[1], [1, 2, -1]], [[1], [2, -1, 1]])
+        PBR([[1], [-1, 1, 2]], [[1], [-1, 1, 2]])
     """
 
     def __init__(self, *args):
