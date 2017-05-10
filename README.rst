@@ -35,21 +35,26 @@ Install the Python bindings::
 From the source
 ^^^^^^^^^^^^^^^
 
+Install some dependencies::
+
+    sudo -H pip install cython cysignals --upgrade
+
 Install the libsemigroups C++ library, e.g. from sources::
 
-    git clone https://github.com/james-d-mitchell/libsemigroups-python-bindings
+    git clone https://github.com/james-d-mitchell/libsemigroups
     cd libsemigroups
-    ./autogen.sh ; make ; sudo make install
+    ./autogen.sh ; ./configure ; make ; sudo make install
+    cd ..
 
 Install the python bindings::
 
+    git clone https://github.com/james-d-mitchell/libsemigroups-python-bindings
     cd libsemigroups-python-bindings
     pip install --user . --upgrade
+    cd ..
 
 Try it out::
 
-    cd libsemigroups-python-bindings
-    pip install --user . --upgrade
     python
 
     >>> from semigroups import Semigroup, Transformation
@@ -57,6 +62,7 @@ Try it out::
     ...               Transformation([2, 3, 2, 3, 5, 5]))
     >>> S.size()
     5
+    >>> quit()
 
 Issues
 ------
