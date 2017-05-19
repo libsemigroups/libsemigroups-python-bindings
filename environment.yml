@@ -1,4 +1,6 @@
 name: semigroups
-
+channels:
+  - conda-forge
 dependencies:
+  - cysignals
   - libsemigroups-python-bindings
