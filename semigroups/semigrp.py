@@ -4,11 +4,11 @@ This module contains classes for representing semigroups.
 # pylint: disable = no-member, protected-access, invalid-name,
 
 import libsemigroups
-from semigroups.elements import Element, Transformation
-from libsemigroups import PythonElement
+from semigroups.elements import Transformation
+from libsemigroups import ElementABC, PythonElementNC
 
 
-class Semigroup(libsemigroups.CySemigroup):
+class Semigroup(libsemigroups.SemigroupNC):
     '''
     A class for handles to libsemigroups semigroups
 
@@ -26,9 +26,9 @@ class Semigroup(libsemigroups.CySemigroup):
         elif len(args) == 0:
             ValueError('there must be at least 1 argument')
 
-        gens = [g._cy_element if isinstance(g, Element) else PythonElement(g)
+        gens = [g if isinstance(g, ElementABC) else PythonElementNC(g)
                 for g in args]
-        libsemigroups.CySemigroup.__init__(self, gens)
+        libsemigroups.SemigroupNC.__init__(self, gens)
 
 
 def FullTransformationMonoid(n):

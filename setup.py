@@ -22,7 +22,7 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     install_requires=['cysignals'],
-    version='0.0.1',
+    version='0.3.1',
     name='semigroups',
     description='Python bindings for the libsemigroups mathematics library',
     long_description=long_description,
@@ -50,11 +50,10 @@ setup(
                            'semigroups/libsemigroups_cpp.h'],
                   libraries=['semigroups'],
                   language='c++',             # generate C++ code
-                  extra_compile_args=extra_compile_args)]),
+                  extra_compile_args=extra_compile_args
+                  )]),
 
-    # setup_requires=['pytest-runner', 'pytest-cython'], # temporarilly
-    # disabled to build conda package
-    tests_require=['pytest'],
+    tests_require=['cysignals'],
 )
 
 # Note: getting the headers included in the source distribution seems tricky.

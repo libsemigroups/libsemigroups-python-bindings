@@ -2,131 +2,12 @@
 This module contains classes for representing elements of semigroups.
 '''
 # pylint: disable = no-member, protected-access, invalid-name,
+# pylint: disable = too-few-public-methods
 
 import libsemigroups
 
 
-class Element(object):
-    '''
-    An abstract base class to handle elements of semigroups.
-    '''
-
-    def __init__(self, cy_element):
-        if not isinstance(cy_element, libsemigroups.CyElement):
-            raise TypeError('the parameter must be a CyElement')
-        self._cy_element = cy_element
-
-    def __mul__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('Elements must be same type')
-        elif self.degree() != other.degree():
-            raise ValueError('Element degrees must be equal')
-        return self.__class__(self._cy_element * other._cy_element)
-
-    def __pow__(self, n):
-        message = 'the argument (power) must be a non-negative integer'
-        if not isinstance(n, int):
-            raise TypeError(message)
-        elif n < 0:
-            raise ValueError(message)
-
-        if n == 0:
-            return self.identity()
-        g = self
-        if n % 2 == 1:
-            x = self  # x = x * g
-        else:
-            x = self.identity()
-        while n > 1:
-            g *= g
-            n //= 2
-            if n % 2 == 1:
-                x *= g
-        return x
-
-    def __lt__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('the arguments (elements) must be same type')
-        return self._cy_element < other._cy_element
-
-    def __le__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('the arguments (elements) must be same type')
-        return self._cy_element <= other._cy_element
-
-    def __eq__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('the arguments (elements) must be same type')
-        return self._cy_element == other._cy_element
-
-    def __ne__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('the arguments (elements) must be same type')
-        return self._cy_element != other._cy_element
-
-    def __gt__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('the arguments (elements) must be same type')
-        return self._cy_element > other._cy_element
-
-    def __ge__(self, other):
-        if not isinstance(self, type(other)):
-            raise TypeError('the arguments (elements) must be same type')
-        return self._cy_element >= other._cy_element
-
-    def degree(self):
-        '''
-        Function for finding the degree of an element.
-
-        This method returns an integer which represents the size of an element,
-        and is used to determine whether or not two elements are compatible for
-        multiplication.
-
-        Args:
-            None
-
-        Returns:
-            int: The degree of the element
-
-        Raises:
-            TypeError:  If any argument is given.
-
-        Example:
-            >>> from semigroups import PartialPerm
-            >>> PartialPerm([1, 2, 5], [2, 3, 5], 6).degree()
-            6
-        '''
-        return self._cy_element.degree()
-
-    def identity(self):
-        '''
-        Function for finding the mutliplicative identity FIXME
-
-        This function finds the multiplicative identity of the same element
-        type and degree as the current element.
-
-        Args:
-            None
-
-        Returns:
-            Element: The identity element of the Element subclass
-
-        Raises:
-            TypeError:  If any argument is given.
-
-        Example:
-            >>> from semigroups import PartialPerm
-            >>> PartialPerm([0, 2], [1, 2], 3).identity()
-            PartialPerm([0, 1, 2], [0, 1, 2], 3)
-        '''
-        return self.__class__(self._cy_element.identity())
-
-    def __iter__(self):
-        for val in self._cy_element:
-            yield val
-
-
-class Transformation(Element):
+class Transformation(libsemigroups.TransformationNC):
     '''
     A class for handling libsemigroups transformations.
 
@@ -150,23 +31,26 @@ class Transformation(Element):
         >>> Transformation([2, 1, 1])
         Transformation([2, 1, 1])
     '''
-    def __init__(self, images):
-        if isinstance(images, libsemigroups.CyElement):
-            Element.__init__(self, images)
-        elif not isinstance(images, list):
-            raise TypeError('<images> must be a list')
-        elif not all(isinstance(x, int) and x >= 0 for x in images):
-            raise TypeError('<images> must only contain ints non-negative')
-        elif max(images) + 1 > len(images):
-            raise ValueError('<images> must not contain values exceeding %d'
-                             % len(images))
-        self._cy_element = libsemigroups.CyTransformation(images)
+    def __init__(self, arg):
+        if isinstance(arg, libsemigroups.ElementABC):
+            # construct an uninitialised Transformation
+            libsemigroups.ElementABC.__init__(self)
+        elif not isinstance(arg, list):
+            raise TypeError('<arg> must be a list, not a %s' % type(arg))
+        elif not all(isinstance(x, int) and x >= 0 for x in arg):
+            raise TypeError('<arg> must only contain non-negative ints')
+        elif max(arg) + 1 > len(arg):
+            raise ValueError('<arg> must not contain values exceeding %d'
+                             % len(arg))
+        else:
+            libsemigroups.TransformationNC.__init__(self, arg)
 
     def __repr__(self):
         return 'Transformation(%s)' % str(list(self))
 
 
-class PartialPerm(Element):
+class PartialPerm(libsemigroups.PartialPermNC):
+
     '''
     A class for handles to libsemigroups partial perm.
 
@@ -199,14 +83,14 @@ class PartialPerm(Element):
     '''
 
     def __init__(self, *args):
-        if len(args) == 1 and isinstance(args[0], libsemigroups.CyElement):
-            Element.__init__(self, args[0])
+        if len(args) == 1 and isinstance(args[0], libsemigroups.ElementABC):
+            # construct an uninitialised PartialPerm
+            libsemigroups.ElementABC.__init__(self)
             self._domain = None
             self._range = None
             return
-
-        if not (isinstance(args[0], list)
-                and all(isinstance(x, int) and x >= 0 for x in args[0])):
+        elif not (isinstance(args[0], list)
+                  and all(isinstance(x, int) and x >= 0 for x in args[0])):
             raise TypeError('the first argument (domain) must be a list '
                             + 'of integers')
         elif not (isinstance(args[1], list)
@@ -242,8 +126,7 @@ class PartialPerm(Element):
 
         for i in range(len(self._domain)):
             images[self._domain[i]] = self._range[i]
-
-        self._cy_element = libsemigroups.CyPartialPerm(images)
+        libsemigroups.PartialPermNC.__init__(self, images)
 
     def _init_dom_ran(self):
         if self._domain is None or self._range is None:
@@ -259,27 +142,7 @@ class PartialPerm(Element):
         return ('PartialPerm(%s, %s, %s)'
                 % (self._domain,
                    self._range,
-                   self.degree())).replace('65535', '-1')
-
-    def rank(self):
-        '''
-        Method for finding the rank of the partial permutation.
-
-        Args:
-            None
-
-        Returns:
-            int: The rank of the partial permutation
-
-        Raises:
-            TypeError:  If any argument is given.
-
-        Example:
-            >>> from semigroups import PartialPerm
-            >>> PartialPerm([1, 2, 5], [2, 3, 5], 6).rank()
-            3
-        '''
-        return self._cy_element.rank()
+                   self.degree())).replace('65535', '-')
 
     def domain(self):
         '''
@@ -325,8 +188,8 @@ class PartialPerm(Element):
         return self._range
 
 
-class Bipartition(Element):
-    '''A class for bipartitions.
+class Bipartition(libsemigroups.BipartitionNC):
+    r'''A class for bipartitions.
 
     A bipartition is a partition of the set :math:`\{-n, ..., -1, 1, ..., n\}`
     for some integer n. This can be stored as a list of blocks, the subsets
@@ -348,8 +211,9 @@ class Bipartition(Element):
 
     def __init__(self, *args):
         if len(args) == 1:
-            if isinstance(args[0], libsemigroups.CyElement):
-                Element.__init__(self, args[0])
+            if isinstance(args[0], libsemigroups.ElementABC):
+                # construct an uninitialised Bipartition
+                libsemigroups.ElementABC.__init__(self)
                 self._blocks = None
                 return
             elif len(args[0]) > 0 and isinstance(args[0][0], list):
@@ -393,7 +257,7 @@ class Bipartition(Element):
                     copy[i][j] = -1 * copy[i][j] + n
 
         self._blocks = copy
-        self._cy_element = libsemigroups.CyBipartition(lookup)
+        libsemigroups.BipartitionNC.__init__(self, lookup)
 
     def block(self, index):
         '''
@@ -426,7 +290,7 @@ class Bipartition(Element):
             index = n - index - 1
         else:
             index -= 1
-        return self._cy_element.block(index)
+        return libsemigroups.BipartitionNC.block(self, index)
 
     def blocks(self):
         '''
@@ -460,64 +324,11 @@ class Bipartition(Element):
             self._blocks = blocks
         return self._blocks
 
-    def nr_blocks(self):
-        '''
-        Function for finding the number of blocks of a bipartition.
-
-        Args:
-            None
-
-        Returns:
-            int: The number blocks of the bipartition
-
-        Raises:
-            TypeError:  If any argument is given.
-
-        Example:
-            >>> from semigroups import Bipartition
-            >>> Bipartition([1, 2], [-2, -1, 3], [-3]).nr_blocks()
-            3
-        '''
-        if self._blocks is not None:
-            return len(self._blocks)
-        else:
-            return self._cy_element.nr_blocks()
-
-    def is_transverse_block(self, index):
-        '''
-        Function for finding whether a given block is transverse.
-
-        A block is transverse if it contains both positive and negative
-        elements.
-
-        Args:
-            index (int): The index of the block in question
-
-        Returns:
-            list: The blocks of the bipartition
-
-        Raises:
-            TypeError:  If index is not an int.
-            IndexError: If index does not relate to the index of a block in the
-                        partition
-
-        Example:
-            >>> from semigroups import Bipartition
-            >>> Bipartition([1, 2], [-2, -1, 3], [-3]).is_transverse_block(1)
-            True
-        '''
-        if not isinstance(index, int):
-            raise TypeError('Index must be an integer')
-        elif index < 0 or index >= self.nr_blocks():
-            raise IndexError('the argument (index) must be in the range 0 '
-                             + 'to %d' % (self.degree() - 1))
-        return self._cy_element.is_transverse_block(index)
-
     def __repr__(self):
         return 'Bipartition(%s)' % self.blocks()
 
 
-class BooleanMat(Element):
+class BooleanMat(libsemigroups.BooleanMatNC):
     '''
     A class for handles to libsemigroups BooleanMat.
 
@@ -542,8 +353,8 @@ class BooleanMat(Element):
         if len(args) == 0:
             raise ValueError('there must be at least 1 argument')
         elif len(args) == 1:
-            if isinstance(args[0], libsemigroups.CyElement):
-                Element.__init__(self, args[0])
+            if isinstance(args[0], libsemigroups.ElementABC):
+                libsemigroups.ElementABC.__init__(self)
                 self._rows = None
                 return
             elif len(args[0]) > 0 and isinstance(args[0][0], list):
@@ -568,7 +379,17 @@ class BooleanMat(Element):
         else:
             self._rows = [row[:] for row in args]
 
-        self._cy_element = libsemigroups.CyBooleanMat(self._rows)
+        libsemigroups.BooleanMatNC.__init__(self, self._rows)
+
+    def __getitem__(self, i):
+        n = self.degree()
+        if i >= n:
+            IndexError('list index out of range')
+        return self.rows()[i]
+
+    def __repr__(self):
+        return ('BooleanMat(%s)'
+                % [[int(x) for x in row] for row in self.rows()])
 
     def rows(self):
         '''
@@ -595,36 +416,8 @@ class BooleanMat(Element):
             self._rows = [flat[i:i + n] for i in range(0, n ** 2, n)]
         return self._rows
 
-    def __getitem__(self, i):
-        n = self.degree()
-        if i >= n:
-            IndexError('list index out of range')
-        return self.rows()[i]
 
-    def __repr__(self):
-        '''
-        Function for printing a string representation of the boolean matrix.
-
-        Args:
-            None
-
-        Returns:
-            str: 'BooleanMat' then the rows in parenthesis.
-
-        Raises:
-            TypeError:  If any argument is given.
-
-        Example:
-            >>> from semigroups import BooleanMat
-            >>> BooleanMat([1, 1], [0, 0])
-            BooleanMat([[1, 1], [0, 0]])
-        '''
-
-        return ('BooleanMat(%s)'
-                % [[int(x) for x in row] for row in self.rows()])
-
-
-class PBR(Element):
+class PBR(libsemigroups.PBRNC):
     """
     A class for handles to libsemigroups PBR.
 
@@ -654,8 +447,8 @@ class PBR(Element):
 
     def __init__(self, *args):
         if len(args) == 1:
-            if isinstance(args[0], libsemigroups.CyElement):
-                Element.__init__(self, args[0])
+            if isinstance(args[0], libsemigroups.ElementABC):
+                libsemigroups.ElementABC.__init__(self)
                 self.__pos_out_neighbours = None
                 self.__neg_out_neighbours = None
                 return
@@ -699,7 +492,7 @@ class PBR(Element):
         int_rep = (_convert_to_internal_rep(args[0]) +
                    _convert_to_internal_rep(args[1]))
 
-        self._cy_element = libsemigroups.CyPBR(int_rep)
+        libsemigroups.PBRNC.__init__(self, int_rep)
 
     def __repr__(self):
         if (self.__neg_out_neighbours is None or
