@@ -13,45 +13,59 @@ del path
 class TestFpSemigroup(unittest.TestCase):
 
     def test_valid_init(self):
-        FpSemigroup(['a'], [])
-        FpSemigroup(['a'], [['a', 'aa']])
-        FpSemigroup(['a', 'b'], [['b', 'aa']])
+        with self.assertRaises(TypeError):
+            FpSemigroup(['a'],[])
+        with self.assertRaises(ValueError):
+            FpSemigroup('aa',[])
+        FpSemigroup('a', [])
+        FpSemigroup('a', [['a', 'aa']])
+        FpSemigroup('ab', [['b', 'aa']])
 
     def test_alphabet_str(self):
         with self.assertRaises(ValueError):
-            FpSemigroup([], [['a', 'aa']])
+            FpSemigroup('', [['a', 'aa']])
         with self.assertRaises(ValueError):
-            FpSemigroup(['a'], [['b', 'aa']])
+            FpSemigroup('a', [['b', 'aa']])
         with self.assertRaises(ValueError):
-            FpSemigroup(['a', 'a'], [['b', 'aa']])
+            FpSemigroup('aa', [['b', 'aa']])
 
     def test_rels_str(self):
         with self.assertRaises(TypeError):
-            FpSemigroup(["a", "b"], "[\"a\", \"aa\"]")
+            FpSemigroup("ab", "[\"a\", \"aa\"]")
         with self.assertRaises(TypeError):
-            FpSemigroup(["a", "b"], ["\"b", "aa\""])
+            FpSemigroup("ab", ["\"b", "aa\""])
         with self.assertRaises(TypeError):
-            FpSemigroup(["a", "b"], [["a", "aa", "b"]])
+            FpSemigroup("ab", [["a", "aa", "b"]])
         with self.assertRaises(TypeError):
-            FpSemigroup(["a", "b"], [["b", ["a", "a"]]])
+            FpSemigroup("ab", [["b", ["a", "a"]]])
         with self.assertRaises(ValueError):
-            FpSemigroup(["a", "b"], [["b", "ca"]])
+            FpSemigroup("ab", [["b", "ca"]])
 
     def test_set_report_str(self):
-        S = FpSemigroup(["a"], [["a", "aa"]])
+        S = FpSemigroup("a", [["a", "aa"]])
         S.set_report(True)
         S.set_report(False)
         with self.assertRaises(TypeError):
             S.set_report("False")
 
+    def test_is_finite_str(self):
+        S = FpSemigroup("ab", [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
+        self.assertEqual(S.is_finite(), True)
+        S = FpSemigroup("ab", [])
+        self.assertEqual(S.is_finite(), False)
+        S = FpSemigroup("ab", [["a","a"],["a","a"]])
+        self.assertEqual(S.is_finite(), False)
+
     def test_size_str(self):
-        S = FpSemigroup(["a"], [["a", "aa"]])
+        S = FpSemigroup("a", [["a", "aa"]])
         self.assertEqual(S.size(), 1)
-        S = FpSemigroup(["a", "b"], [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
+        S = FpSemigroup("ab", [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
         self.assertEqual(S.size(), 3)
+        S = FpSemigroup("ab", [])
+        self.assertEqual(S.size(), float("inf"))
 
     def test_word_to_class_index_str(self):
-        S = FpSemigroup(["a", "b"], [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
+        S = FpSemigroup("ab", [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
 
         self.assertIsInstance(S.word_to_class_index("aba"), int)
 
@@ -65,53 +79,55 @@ class TestFpSemigroup(unittest.TestCase):
                          S.word_to_class_index("abaaabb"))
 
     def test_repr(self):
-        S = FpSemigroup(["a", "b"], [["aa", "a"], ["bbb", "ab"], ["ab", "ba"]])
+        S = FpSemigroup("ab", [["aa", "a"], ["bbb", "ab"], ["ab", "ba"]])
         self.assertEqual(S.__repr__(),
                          "<fp semigroup with 2 generators and 3 relations>")
 
 class TestFpMonoid(unittest.TestCase):
 
     def test_valid_init(self):
-        FpMonoid([], [])
-        FpMonoid(["a"], [])
-        FpMonoid(["a"], [["a", "aa"]])
-        FpMonoid(["a", "b"], [["b", "aa"]])
-        FpMonoid(["a", "b"], [["1", "aa"]])
+        FpMonoid("", [])
+        FpMonoid("a", [])
+        with self.assertRaises(ValueError):
+            FpMonoid("1", [])
+        FpMonoid("a", [["a", "aa"]])
+        FpMonoid("ab", [["b", "aa"]])
+        FpMonoid("ab", [["1", "aa"]])
 
     def test_alphabet_str(self):
         with self.assertRaises(ValueError):
-            FpMonoid([], [["a", "aa"]])
+            FpMonoid("", [["a", "aa"]])
         with self.assertRaises(ValueError):
-            FpMonoid(["a"], [["b", "aa"]])
+            FpMonoid("a", [["b", "aa"]])
         with self.assertRaises(ValueError):
-            FpMonoid(["a", "a"], [["b", "aa"]])
+            FpMonoid("aa", [["b", "aa"]])
 
     def test_rels_str(self):
         with self.assertRaises(TypeError):
-            FpMonoid(["a", "b"], "[\"a\", \"aa\"]")
+            FpMonoid("ab", "[\"a\", \"aa\"]")
         with self.assertRaises(TypeError):
-            FpMonoid(["a", "b"], ["\"b\", \"aa\""])
+            FpMonoid("ab", ["\"b\", \"aa\""])
         with self.assertRaises(TypeError):
-            FpMonoid(["a", "b"], [["a", "aa", "b"]])
+            FpMonoid("ab", [["a", "aa", "b"]])
         with self.assertRaises(TypeError):
-            FpMonoid(["a", "b"], [["b", ["a", "a"]]])
+            FpMonoid("ab", [["b", ["a", "a"]]])
         with self.assertRaises(ValueError):
-            FpMonoid(["a", "b"], [["b", "ca"]])
+            FpMonoid("ab", [["b", "ca"]])
 
     def test_set_report_str(self):
-        M = FpMonoid(["a"], [["a", "aa"]])
+        M = FpMonoid("a", [["a", "aa"]])
         M.set_report(True)
         M.set_report(False)
         with self.assertRaises(TypeError):
             M.set_report("False")
 
     def test_size(self):
-        self.assertEqual(FpMonoid(["a"], [["a", "aa"]]).size(), 2)
-        self.assertEqual(FpMonoid(["a", "b"], [["a", "aa"], ["b", "bb"],
+        self.assertEqual(FpMonoid("a", [["a", "aa"]]).size(), 2)
+        self.assertEqual(FpMonoid("ab", [["a", "aa"], ["b", "bb"],
         ["ab", "ba"]]).size(), 4)
 
     def test_word_to_class_index_str(self):
-        M = FpMonoid(["a", "b"], [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
+        M = FpMonoid("ab", [["a", "aa"], ["b", "bb"], ["ab", "ba"]])
         self.assertEqual(M.word_to_class_index('a'),
                          M.word_to_class_index('aa'))
         self.assertNotEqual(M.word_to_class_index('a'),
@@ -120,7 +136,7 @@ class TestFpMonoid(unittest.TestCase):
         self.assertIsInstance(M.word_to_class_index('aba'), int)
 
     def test_repr(self):
-        M = FpMonoid(["a", "b"], [["aa", "a"], ["bbb", "ab"], ["ab", "ba"]])
+        M = FpMonoid("ab", [["aa", "a"], ["bbb", "ab"], ["ab", "ba"]])
         self.assertEqual(M.__repr__(),
                          "<fp monoid with 2 generators and 3 relations>")
 

@@ -6,8 +6,8 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
     A class for finitely presented semigroups.
 
     Args:
-        alphabet (list): the generators of the finitely presented semigroup,
-            must be a list of strings of length 1.
+        alphabet (string): the generators of the finitely presented semigroup,
+            must be a string of distinct characters.
 
         rels (list): the relations containing pairs of string which are
             equivalent in the finitely presented semigroup
@@ -18,7 +18,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
         ValueError: if TODO
 
     Examples:
-        >>> FpSemigroup(['a', 'b'],
+        >>> FpSemigroup('ab',
         ...             [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']])
         <fp semigroup with 2 generators and 3 relations>
 
@@ -43,12 +43,11 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
 
     def __init__(self, alphabet, rels):
         # Check the alphabet
-        if not isinstance(alphabet, list):
-            raise TypeError('the first argument (alphabet) must be a list')
-        elif not all(isinstance(x, str) or alphabet.count(x) > 1
-                     for x in alphabet):
+        if not isinstance(alphabet, str):
+            raise TypeError('the first argument (alphabet) must be a string')
+        elif not all(alphabet.count(x) == 1 for x in alphabet):
             raise ValueError('the first argument (alphabet) must be a '
-                             'duplicate-free list of strings')
+                             'duplicate-free string')
 
         # Corner case
         if len(alphabet) == 0 and not len(rels) == 0:
@@ -85,13 +84,13 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
             int: the size of the finitely presented semigroup.
 
         Examples:
-            >>> FpSemigroup(['a', 'b'],
+            >>> FpSemigroup('ab',
             ...             [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']]).size()
             5
-            >>> FpMonoid(['a', 'b'],
+            >>> FpMonoid('ab',
             ...          [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']]).size()
             6
-            >>> FpMonoid(['a', 'b'],
+            >>> FpMonoid('ab',
             ...          [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']]).size()
             6
         '''
@@ -106,11 +105,11 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
             bool: ``True`` if finite, ``False`` otherwise.
 
         Examples:
-            >>> S = FpSemigroup(['a', 'b'],
+            >>> S = FpSemigroup('ab',
             ...                 [['aa', 'a'],['bbb', 'ab'], ['ab','ba']])
             >>> S.is_finite()
             True
-            >>> FpSemigroup(['a', 'b'], []).is_finite()
+            >>> FpSemigroup('ab', []).is_finite()
             False
         '''
         # Check if number of generators exceeds number of relations
@@ -119,6 +118,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
 
         # Check if any generator belongs to no relation
         for letter in self.alphabet:
+            stop = False
             for rel in self.relations:
                 for word in rel:
                     if letter in word:
@@ -126,7 +126,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
                         break
                 if stop:
                     break
-            else:
+            if not stop:
                 return False
 
         return (isinstance(libsemigroups.FpSemigroupNC.size(self), int) or
@@ -146,7 +146,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC):
             ValueError: if TODO
 
         Examples:
-            >>> S = FpSemigroup(['a', 'b'],
+            >>> S = FpSemigroup('ab',
             ...                 [['aa', 'a'], ['bbb', 'ab'], ['ab', 'ba']])
             >>> S.word_to_class_index('a')
             0
@@ -171,7 +171,7 @@ class FpMonoid(FpSemigroup):
         for letter in alphabet:
             rels.append([letter + '1', letter])
             rels.append(['1' + letter, letter])
-        alphabet.append('1')
+        alphabet += '1'
         FpSemigroup.__init__(self, alphabet, rels)
 
     def __repr__(self):
