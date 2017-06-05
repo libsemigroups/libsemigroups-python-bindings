@@ -24,6 +24,16 @@ class TestSemigroup(unittest.TestCase):
         with self.assertRaises(TypeError):
             Semigroup({2, 3})
 
+    def test_right_cayley_graph(self):
+        Semigroup(-1).right_cayley_graph()
+        self.assertTrue(isinstance(Semigroup(-1).right_cayley_graph(),
+                                   CayleyGraph))
+
+    def test_left_cayley_graph(self):
+        Semigroup(Transformation([0, 1])).right_cayley_graph()
+        self.assertTrue(isinstance(Semigroup(-1).left_cayley_graph(),
+                                   CayleyGraph))
+
 class TestOtherFunctions(unittest.TestCase):
     def test_full_transformation_monoid(self):
         self.assertEqual(full_transformation_monoid(3)[7],
