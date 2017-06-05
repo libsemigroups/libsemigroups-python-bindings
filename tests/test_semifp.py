@@ -19,7 +19,9 @@ class TestFpSemigroup(unittest.TestCase):
             FpSemigroup('aa',[])
         FpSemigroup('a', [])
         FpSemigroup('a', [['a', 'aa']])
-        FpSemigroup('ab', [['b', 'aa']])
+        FpSemigroup('ab', [['b', 'a(a)']])
+        FpSemigroup('a', [['a', 'a^4']])
+        FpSemigroup('ab', [['b', '(ab)^2a']])
 
     def test_alphabet_str(self):
         with self.assertRaises(ValueError):
@@ -93,6 +95,8 @@ class TestFpMonoid(unittest.TestCase):
         FpMonoid("a", [["a", "aa"]])
         FpMonoid("ab", [["b", "aa"]])
         FpMonoid("ab", [["1", "aa"]])
+        FpMonoid("ab", [["b", "a^2"]])
+        FpMonoid("ab", [["1", "(a)^6"]])
 
     def test_alphabet_str(self):
         with self.assertRaises(ValueError):

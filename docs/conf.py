@@ -123,6 +123,8 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+#Forces order of functions to appear as in source code, rather than sorted.
+autodoc_member_order = 'bysource'
 
 # -- Options for HTML output ----------------------------------------------
 
