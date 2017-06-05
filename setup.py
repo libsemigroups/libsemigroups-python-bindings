@@ -21,7 +21,7 @@ with codecs.open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    install_requires=['cysignals'],
+    install_requires=['cysignals', 'networkx'],
     version='0.3.1',
     name='semigroups',
     description='Python bindings for the libsemigroups mathematics library',
