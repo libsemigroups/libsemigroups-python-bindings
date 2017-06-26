@@ -2,7 +2,7 @@
 import unittest
 import sys
 import os
-from semigroups import FpSemigroup, FpMonoid, FPSOME
+from semigroups import FpSemigroup, FpMonoid
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if path not in sys.path:
@@ -26,6 +26,7 @@ class TestFpSemigroup(unittest.TestCase):
 
     def test_parse_word(self):
         S = FpSemigroup('~', [])
+        self.assertFalse(S._pure_letter_alphabet)
         self.assertEqual(S._parse_word("~"),"~")
         S = FpSemigroup('a', [])
         self.assertEqual(S._parse_word("aa"),"aa")
@@ -224,76 +225,65 @@ class TestFpMonoid(unittest.TestCase):
         self.assertEqual(M.__repr__(),
                          "<fp monoid with 2 generators and 3 relations>")
 
-class TestFPSOME(unittest.TestCase):
+class Test_FPSOME(unittest.TestCase):
 
     def test_valid_init(self):
         FpS = FpSemigroup("ab", [["aa", "a"], ["bbb", "b"], ["ba", "ab"]])
-        FPSOME(FpS,"aba")
-        FPSOME(FpS,"a")
-        FpS = FpSemigroup("mo", [["ooo", "o"]])
-        FPSOME(FpS, "moo")
-        FPSOME(FpS, "ooo")
-        FpS = FpSemigroup("cowie", [])
-        FPSOME(FpS,"cowie")
-        FpS2 = FpSemigroup('~', [])
-        FPSOME(FpS2,"~~")
+        FpS.equal("a", "aba")
+        FpS = FpSemigroup("mo", [["m", "mm"], ["ooo", "o"], ["mo", "om"]])
+        FpS.equal("moo", "ooo")
+        FpS = FpSemigroup("cowie", [["c", "o"], ["o", "w"], ["w", "i"],
+                                   ["i", "e"], ["ee", "e"]])
+        FpS.equal("cowie","cowie")
+        FpS2 = FpSemigroup('~', [["~~", "~"]])
+        FpS2.equal("~", "~~")
         with self.assertRaises(TypeError):
-            FPSOME("aba", "aba")
-        with self.assertRaises(TypeError):
-            FPSOME(FpS, FpS)
+            FpS.equal(FpS, FpS)
         with self.assertRaises(ValueError):
-            FPSOME(FpS,"abc")
+            FpS.equal("abc", "abc")
 
     def test_eq_(self):
         FpS = FpSemigroup("ab", [["a^10", "a"], ["bbb", "b"], ["ba", "ab"]])
-        a = FPSOME(FpS, "aba")
+        a = "aba"
         b = a
-        self.assertEqual(a, b)
-        a = FPSOME(FpS, "aaba")
-        b = FPSOME(FpS, "ba^3")
-        self.assertEqual(a, b)
-        a = FPSOME(FpS, "")
+        self.assertTrue(FpS.equal(a, b))
+        a = "aaba"
+        b = "ba^3"
+        self.assertTrue(FpS.equal(a, b))
+        a = ""
         self.assertEqual(a, a)
 
     def test_ne_(self):
         FpS = FpSemigroup("ab", [["a^10", "a"], ["bbb", "b"], ["ba", "ab"]])
-        a = FPSOME(FpS, "aba")
-        b = a * a
-        self.assertNotEqual(a, b)
-        a = FPSOME(FpS, "aaba")
-        b = FPSOME(FpS, "ba^4")
-        self.assertNotEqual(a, b)
+        a = "aba"
+        b = a + a
+        self.assertFalse(FpS.equal(a, b))
+        a = "aaba"
+        b = "ba^4"
+        self.assertFalse(FpS.equal(a, b))
 
     def test_identity(self):
         FpS = FpSemigroup("ab", [["a^10", "a"], ["bbb", "b"], ["ba", "ab"]])
-        a = FPSOME(FpS, "aba")
-        self.assertEqual(a.identity(), FPSOME(FpS, ""))
+        a = FpS[0].get_value()
+        self.assertEqual(a.identity().word, "")
         FpS = FpMonoid("ab", [["a^10", "a"], ["bbb", "b"], ["ba", "ab"]])
-        a = FPSOME(FpS, "aba")
-        self.assertEqual(a.identity(), FPSOME(FpS, ""))
-
-    def test_degree(self):
-        FpS = FpSemigroup("ab", [["a^10", "a"], ["bbb", "b"], ["ba", "ab"]])
-        a = FPSOME(FpS, "aba")
-        self.assertEqual(a.degree(), 0)
+        a = FpS[1].get_value()
+        self.assertEqual(a.identity().word, "1")
 
     def test_mul(self):
         FpS = FpSemigroup("ab", [["aa", "a"], ["bbb", "b"], ["ba", "ab"]])
         other = "aa"
-        a = FPSOME(FpS, "aba")
+        a = FpS[1].get_value()
         a * a
-        e = FPSOME(FpS, "")
-        self.assertEqual(a * a, FPSOME(FpS, "abaaba"))
-        with self.assertRaises(ValueError):
-            e * e
+        self.assertEqual(a.word + a.word, (a * a).word)
         with self.assertRaises(TypeError):
             a * other
         with self.assertRaises(TypeError):
-            FPSOME(FpSemigroup("ab", []), "aba") * a
-        
+            FpSemigroup("a", [["aa", "a"]])[0].get_value() * a
+
     def test_repr(self):
         FpS = FpSemigroup("ab", [["aa", "a"], ["bbb", "b"], ["ab", "ba"]])
-        self.assertEqual(FPSOME(FpS, "ab").__repr__(), "'ab'")
+        self.assertEqual(FpS[0].__repr__(), "'" + FpS[0].get_value().Repword + "'")
 
 
 if __name__ == "__main__":
