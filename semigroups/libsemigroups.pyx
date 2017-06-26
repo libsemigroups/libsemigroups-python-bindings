@@ -152,7 +152,6 @@ cdef class ElementABC:
         identity[0].really_delete()
         return out
 
-
 cdef class TransformationNC(ElementABC):
     def __init__(self, images):
         self._handle = new libsemigroups.Transformation[uint16_t](images)
@@ -477,9 +476,7 @@ cdef class SemigroupNC:
                 yield self.new_from_handle(element)
             pos += 1
 
-
-# FIXME should be a subclass of SemigroupNC
-cdef class FpSemigroupNC:
+cdef class FpSemigroupNC(SemigroupNC):
     cdef libsemigroups.Congruence* _congruence
     cdef libsemigroups.RWS* _rws
     
@@ -511,10 +508,11 @@ cdef class FpSemigroupNC:
 
     def set_report(self, val):
         '''
-        toggles whether or not to report data when running certain functions
+        Sets whether or not to report data when running certain 
+        functions (e.g size).
 
         Args:
-            bool:toggle to True or False
+            bool:set to True or False
         '''
         if val != True and val != False:
             raise TypeError('the argument must be True or False')
@@ -525,7 +523,7 @@ cdef class FpSemigroupNC:
 
     def set_max_threads(self, nr_threads):
         '''
-        sets the maximum number of threads to be used at once.
+        Sets the maximum number of threads to be used at once.
 
         Args:
             int:number of threads
@@ -534,14 +532,23 @@ cdef class FpSemigroupNC:
 
     def is_confluent(self):
         '''
-        check if the relations of the FpSemigroup are confluent.
+        Checks if the rewriting system defined by the relations of a finitely 
+        presented semigroup is confluent.
+        
+        If a finitely presented semigroup has a confluent rewriting system
+        then it has solvable word problem. In other words, there is an 
+        algorithm to decide when two words over the generators of the semigroup
+        are equal. Indeed, once we have a confluent rewriting system, it is
+        possible to successfully test that two words represent the same element
+        in the semigroup, by reducing both words using the rewriting system
+        rules.
 
         Examples:
-            >>> FpSemigroup(["a","b"],[["aa","a"],["bbb","ab"],
-                                                  ["ab","ba"]).is_confluent()
+            >>> FpSemigroup("ab",[["aa","a"],["bbb","ab"],
+                                             ["ab","ba"]).is_confluent()
             True
-            >>> FpSemigroup(["a","b"],[["aa","a"],["bab","ab"],
-                                                  ["ab","ba"]).is_confluent()
+            >>> FpSemigroup("ab",[["aa","a"],["bab","ab"],
+                                             ["ab","ba"]).is_confluent()
             False
 
         Returns:

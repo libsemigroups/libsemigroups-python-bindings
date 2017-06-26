@@ -1,7 +1,7 @@
 '''
 This module contains classes for representing semigroups.
 '''
-# pylint: disable = no-member, protected-access, invalid-name,
+# pylint: disable = no-member, protected-access, invalid-name
 
 import libsemigroups
 from semigroups.elements import Transformation
@@ -26,10 +26,10 @@ class Semigroup(libsemigroups.SemigroupNC):
         elif len(args) == 0:
             ValueError('there must be at least 1 argument')
 
-        gens = [g if isinstance(g, ElementABC) else PythonElementNC(g)
-                for g in args]
+        gens = [g if (isinstance(g, ElementABC) and str(type(g)) !=
+                      "<class 'semigroups.semifp.FPSOME'>")
+                else PythonElementNC(g) for g in args]
         libsemigroups.SemigroupNC.__init__(self, gens)
-
 
 def FullTransformationMonoid(n):
     '''
