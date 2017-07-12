@@ -496,3 +496,356 @@ class BooleanSemiring(SemiringABC):
         '''
 
         return True
+
+class SemiringWithThresholdABC(SemiringABC):
+    '''
+    A *semiring with a threshold* is a semiring with a largest finite value,
+    the *threshold*.
+
+    This abstract class provides common methods for its subclasses.
+
+    Returns:
+        None
+
+    Raises:
+        TypeError:  If any argument is given.
+    '''
+
+    def threshold(self):
+        '''
+        A function to find the threshold of a semiring.
+
+        Returns:
+            The threshold of the semiring.
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import TropicalMaxPlusSemiring, NaturalSemiring
+            >>> TropicalMinPlusSemiring(3).threshold()
+            3
+            >>> NaturalSemiring(9, 27).threshold()
+            9
+        '''
+
+        return self._threshold
+
+class TropicalMaxPlusSemiring(SemiringWithThresholdABC):
+    # pylint: disable = super-init-not-called
+    r'''
+    A *tropical max plus semiring* is a semiring comprising the set :math:`\{0,
+    \ldots, t\} \cup\{-\infty\}`, for some value :math:`t\in\mathbb{N} \cup
+    \{0\}`, the threshold of the semiring, together with an operation which
+    returns the maximum of two elements, as the additive operation and addition
+    of integers as the multiplicative operation.
+
+    *Minus infinity* is a defined as smaller than all integers, and the integer
+    sum of minus infinity and any element of the tropical max plus semiring is
+    minus infinity.
+
+    If the integer sum of any two elements is greater than the threshold, then
+    the product is the threshold.
+
+    Args:
+        threshold (int):    The threshold of the semiring.
+
+    Returns:
+        None
+
+    Raises:
+        TypeError:  If threshold is not an int.
+        ValueError: If threshold is negative.
+
+    Examples:
+        >>> from semigroups import TropicalMaxPlusSemiring
+        >>> TropicalMaxPlusSemiring(26).plus(7, 25)
+        25
+        >>> TropicalMaxPlusSemiring(26).prod(7, 25)
+        26
+        >>> TropicalMaxPlusSemiring(26).threshold()
+        26
+    '''
+
+    def __init__(self, threshold):
+        if not isinstance(threshold, int):
+            raise TypeError
+
+        if threshold < 0:
+            raise ValueError
+
+        self._threshold = threshold
+
+    def plus(self, x, y):
+        '''
+        A function to find the maximum of two elements of a tropical max plus
+        semiring, since this is the addition operation of a tropical max plus
+        semiring.
+
+        Args:
+            x (int or float):    One of the elements to be added.
+            y (int or float):    The other of the elements to be added.
+
+        Returns:
+            int or float:   The maximum of x and y.
+
+        Raises:
+            TypeError:  If x and y are not both ints or minus infinity.
+            ValueError: If either x or y is negative and not minus infinity, or
+                        if x or y is greater than the threshold.
+
+        Examples:
+            >>> from semigroups import TropicalMaxPlusSemiring
+            >>> TropicalMaxPlusSemiring(72).plus(-float('inf'), 25)
+            25
+        '''
+
+        if not ((isinstance(x, int) or x == -float('inf'))
+                and (isinstance(y, int) or y == -float('inf'))):
+            raise TypeError
+        if (x < 0 and x != -float('inf')) or (y < 0 and y != -float('inf')):
+            raise ValueError
+        if (x > self._threshold) or (y > self._threshold):
+            raise ValueError
+
+        return max(x, y)
+
+    def prod(self, x, y):
+        '''
+        A function to find the integer sum of two elements of a tropical max
+        plus semiring, since this is the mutliplicative operation of a tropical
+        max plus semiring. If the integer sum is greater than :math:`t`, then
+        the result is :math:`t`.
+
+        Note that the if either value is minus infinity, then minus infinity
+        will be returned.
+
+        Args:
+            x (int or float):    One of the elements to be multiplied.
+            y (int or float):    The other of the elements to be multplied.
+
+        Returns:
+            int or float:    x + y
+
+        Raises:
+            TypeError:  If x and y are not both ints or minus infinity.
+            ValueError: If either x or y is negative and not minus infinity, or
+                        if x or y is greater than the threshold.
+
+        Examples:
+            >>> from semigroups import TropicalMaxPlusSemiring
+            >>> TropicalMaxPlusSemiring(72).prod(-float('inf'), 25)
+            -inf
+        '''
+        if not ((isinstance(x, int) or x == -float('inf'))
+                and (isinstance(y, int) or y == -float('inf'))):
+            raise TypeError
+        if (x < 0 and x != -float('inf')) or (y < 0 and y != -float('inf')):
+            raise ValueError
+        if (x > self._threshold) or (y > self._threshold):
+            raise ValueError
+
+        return min(self._threshold, x + y)
+
+    @staticmethod
+    def zero():
+        '''
+        A function to find the additive identity of a tropical max plus
+        semiring, which is minus infinity.
+
+        Returns:
+            float:   -inf
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import TropicalMaxPlusSemiring
+            >>> TropicalMaxPlusSemiring(72).zero()
+            -inf
+        '''
+
+        return -float('inf')
+
+    @staticmethod
+    def one():
+        '''
+        A function to find the multiplicative identity of a tropical max plus
+        semiring, which is 0.
+
+        Returns:
+            int:    0
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import TropicalMaxPlusSemiring
+            >>> TropicalMaxPlusSemiring(72).one()
+            0
+        '''
+
+        return 0
+
+class TropicalMinPlusSemiring(SemiringWithThresholdABC):
+    # pylint: disable = super-init-not-called
+    r'''
+    A *tropical min plus semiring* is a semiring comprising the set :math:`\{0,
+    \ldots, t\} \cup\{-\infty\}`, for some value :math:`t\in\mathbb{N} \cup
+    \{0\}`, the threshold of the semiring, together with an operation which
+    returns the maximum of two elements, as the additive operation and addition
+    of integers as the multiplicative operation.
+
+    *Plus infinity* is a defined as greater than all integers, and the integer
+    sum of plus infinity and any element of the tropical min plus semiring is
+    plus infinity.
+
+    If the integer sum of any two elements is greater than the threshold, then
+    the product is the threshold.
+
+    Args:
+        threshold (int):    The threshold of the semiring.
+
+    Returns:
+        None
+
+    Raises:
+        TypeError:  If threshold is not an int.
+        ValueError: If threshold is negative.
+
+    Examples:
+        >>> from semigroups import TropicalMinPlusSemiring
+        >>> TropicalMinPlusSemiring(81).plus(7, 37)
+        7
+        >>> TropicalMinPlusSemiring(81).prod(7, 37)
+        44
+        >>> TropicalMinPlusSemiring(10).threshold()
+        10
+    '''
+
+    def __init__(self, threshold):
+        if not isinstance(threshold, int):
+            raise TypeError
+
+        if threshold < 0:
+            raise ValueError
+
+        self._threshold = threshold
+
+    def plus(self, x, y):
+        '''
+        A function to find the minimum of two elements of a tropical min plus
+        semiring, since this is the additive operation of a tropical min plus
+        semiring.
+
+        Args:
+            x (int or float):    One of the elements to be added.
+            y (int or float):    The other of the elements to be added.
+
+        Returns:
+            int or float:   The minimum of x and y.
+
+        Raises:
+            TypeError:  If x and y are not both ints or plus infinity.
+            ValueError: If either x or y is negative and not plus infinity, or
+                        if x or y is greater than the threshold.
+
+        Examples:
+            >>> from semigroups import TropicalMinPlusSemiring
+            >>> TropicalMinPlusSemiring(7).plus(float('inf'), 3)
+            3
+        '''
+
+        if not ((isinstance(x, int) or x == float('inf'))
+                and (isinstance(y, int) or y == float('inf'))):
+            raise TypeError
+
+        if x < 0 or y < 0:
+            raise ValueError
+
+        if ((x > self._threshold and x != float('inf')) or
+                (y > self._threshold and y != float('inf'))):
+            raise ValueError
+
+        return min(x, y)
+
+    def prod(self, x, y):
+        '''
+        A function to find the integer sum of two elements of a tropical min
+        plus semiring, since this is the multiplicative operation of a tropical
+        min plus semiring. If the integer sum is greater than :math:`t`, then
+        the result is :math:`t`.
+
+        Note that the if either value is plus infinity, then plus infinity will
+        be returned.
+
+        Args:
+            x (int or float):    One of the elements to be multiplied.
+            y (int or float):    The other of the elements to be multplied.
+
+        Returns:
+            int or float:    x + y
+
+        Raises:
+            TypeError:  If x and y are not both ints or plus infinity.
+            ValueError: If either x or y is negative and not plus infinity, or
+                        if x or y is greater than the threshold.
+
+        Examples:
+            >>> from semigroups import TropicalMinPlusSemiring
+            >>> TropicalMinPlusSemiring(7).prod(float('inf'), 3)
+            inf
+        '''
+
+        if not ((isinstance(x, int) or x == float('inf'))
+                and (isinstance(y, int) or y == float('inf'))):
+            raise TypeError
+        if x < 0 or y < 0:
+            raise ValueError
+        if ((x > self._threshold and x != float('inf')) or
+                (y > self._threshold and y != float('inf'))):
+            raise ValueError
+        if max(x, y) == float('inf'):
+            return float('inf')
+
+        return min(self._threshold, x + y)
+
+    @staticmethod
+    def zero():
+        '''
+        A function to find the additive identity of a tropical min plus
+        semiring, which is plus infinity.
+
+        Returns:
+            float:   inf
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import TropicalMinPlusSemiring
+            >>> TropicalMinPlusSemiring(7).zero()
+            inf
+        '''
+
+        return float('inf')
+
+    @staticmethod
+    def one():
+        '''
+        A function to find the multiplicative identity of a tropical min plus
+        semiring, which is 0.
+
+        Returns:
+            int:    0
+
+        Raises:
+            TypeError:  If any argument is given.
+
+                Examples:
+            >>> from semigroups import TropicalMinPlusSemiring
+            >>> TropicalMinPlusSemiring(7).one()
+            0
+        '''
+
+        return 0

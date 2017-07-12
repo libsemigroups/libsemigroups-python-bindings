@@ -2,7 +2,8 @@ import unittest
 import sys
 import os
 from semigroups import (SemiringABC, Integers, MaxPlusSemiring,
-                        MinPlusSemiring, BooleanSemiring)
+                        MinPlusSemiring, BooleanSemiring,
+                        TropicalMaxPlusSemiring, TropicalMinPlusSemiring)
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if not path in sys.path:
@@ -186,6 +187,140 @@ class TestBooleanSemiring(unittest.TestCase):
             BooleanSemiring().prod('True', 'False')
         with self.assertRaises(TypeError):
             BooleanSemiring().prod(True)
+
+class TestTropicalMaxPlusSemiring(unittest.TestCase):
+    def test_init(self):
+        TropicalMaxPlusSemiring(20)
+        TropicalMaxPlusSemiring(0)
+
+        with self.assertRaises(ValueError):
+            TropicalMaxPlusSemiring(-10)
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring()
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(20.0)
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(float('inf'))
+
+    def test_plus(self):
+        self.assertEqual(TropicalMaxPlusSemiring(10).plus(7, 3), 7)
+        self.assertEqual(TropicalMaxPlusSemiring(30).plus(30, 5), 30)
+        self.assertEqual(TropicalMaxPlusSemiring(73).plus(0, 20), 20)
+        self.assertEqual(TropicalMaxPlusSemiring(26).plus(-float('inf'), 20), 20)
+
+        with self.assertRaises(ValueError):
+            TropicalMaxPlusSemiring(8).plus(10, 7)
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(12).plus(10.0, 1)
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(3).plus(0, '2')
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(8000).plus(0, float('inf'))
+        with self.assertRaises(ValueError):
+            TropicalMaxPlusSemiring(8000).plus(0, -5)
+
+    def test_prod(self):
+        self.assertEqual(TropicalMaxPlusSemiring(10).prod(7, 3), 10)
+        self.assertEqual(TropicalMaxPlusSemiring(30).prod(30, 5), 30)
+        self.assertEqual(TropicalMaxPlusSemiring(73).prod(0, 20), 20)
+        self.assertEqual(TropicalMaxPlusSemiring(26).prod(-float('inf'), 20),
+                         -float('inf'))
+
+        with self.assertRaises(ValueError):
+            TropicalMaxPlusSemiring(8).prod(10, 7)
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(12).prod(10.0, 1)
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(3).prod(0, '2')
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(8000).prod(0, float('inf'))
+        with self.assertRaises(ValueError):
+            TropicalMaxPlusSemiring(8000).prod(0, -5)
+
+    def test_zero(self):
+        self.assertEqual(TropicalMaxPlusSemiring(10).zero(), -float('inf'))
+
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(20).zero(26)
+
+    def test_one(self):
+        self.assertEqual(TropicalMaxPlusSemiring(73).one(), 0)
+
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(7).one(26)
+
+    def test_threshold(self):
+        self.assertEqual(TropicalMaxPlusSemiring(20).threshold(), 20)
+
+        with self.assertRaises(TypeError):
+            TropicalMaxPlusSemiring(83).threshold(1)
+
+class TestTropicalMinPlusSemiring(unittest.TestCase):
+    def test_init(self):
+        TropicalMinPlusSemiring(20)
+        TropicalMinPlusSemiring(0)
+
+        with self.assertRaises(ValueError):
+            TropicalMinPlusSemiring(-10)
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring()
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(20.0)
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(float('inf'))
+
+    def test_plus(self):
+        self.assertEqual(TropicalMinPlusSemiring(10).plus(7, 3), 3)
+        self.assertEqual(TropicalMinPlusSemiring(30).plus(30, 5), 5)
+        self.assertEqual(TropicalMinPlusSemiring(73).plus(0, 20), 0)
+        self.assertEqual(TropicalMinPlusSemiring(26).plus(float('inf'), 20), 20)
+
+        with self.assertRaises(ValueError):
+            TropicalMinPlusSemiring(8).plus(10, 7)
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(12).plus(10.0, 1)
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(3).plus(0, '2')
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(8000).plus(0, -float('inf'))
+        with self.assertRaises(ValueError):
+            TropicalMinPlusSemiring(8000).plus(0, -5)
+
+    def test_prod(self):
+        self.assertEqual(TropicalMinPlusSemiring(10).prod(7, 3), 10)
+        self.assertEqual(TropicalMinPlusSemiring(30).prod(30, 5), 30)
+        self.assertEqual(TropicalMinPlusSemiring(73).prod(0, 20), 20)
+        self.assertEqual(TropicalMinPlusSemiring(26).prod(float('inf'), 20),
+                         float('inf'))
+
+        with self.assertRaises(ValueError):
+            TropicalMinPlusSemiring(8).prod(10, 7)
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(12).prod(10.0, 1)
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(3).prod(0, '2')
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(8000).prod(0, -float('inf'))
+        with self.assertRaises(ValueError):
+            TropicalMinPlusSemiring(8000).prod(0, -5)
+
+    def test_zero(self):
+        self.assertEqual(TropicalMinPlusSemiring(10).zero(), float('inf'))
+
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(20).zero(26)
+
+    def test_one(self):
+        self.assertEqual(TropicalMinPlusSemiring(73).one(), 0)
+
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(7).one(26)
+
+    def test_threshold(self):
+        self.assertEqual(TropicalMinPlusSemiring(20).threshold(), 20)
+
+        with self.assertRaises(TypeError):
+            TropicalMinPlusSemiring(83).threshold(1)
 
 if __name__ == '__main__':
     unittest.main()
