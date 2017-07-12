@@ -849,3 +849,162 @@ class TropicalMinPlusSemiring(SemiringWithThresholdABC):
         '''
 
         return 0
+
+class NaturalSemiring(SemiringWithThresholdABC):
+    # pylint: disable = super-init-not-called
+    r'''
+    Let :math:`t\in\mathbb{N} \cup \{0\}, \ p\in\mathbb{N}` and :math:`\equiv`
+    be the congruence relation on :math:`\mathbb{N} \cup \{0\}` defined by
+    :math:`t\equiv t + p`. A *natural semiring* is a semiring comprising the
+    set :math:`\{0, \ldots, p + t - 1\}`, together with addition an
+    multiplication of naturals modulo :math:`\equiv`. Then :math:`t` is called
+    the *threshold* of the semiring and :math:`p` is the *period*.
+
+    Args:
+        threshold (int):    The threshold of the semiring.
+        period (int):       The period of the semiring.
+
+    Returns:
+        None
+
+    Raises:
+        TypeError:  If the threshold and period are not both ints.
+        ValueError: If the threshold is negative or the period is not positive.
+
+    Examples:
+        >>> from semigroups import NaturalSemiring
+        >>> NaturalSemiring(3, 4).plus(2, 6)
+        4
+        >>> NaturalSemiring(3, 4).prod(2, 6)
+        4
+        >>> NaturalSemiring(3, 4).threshold()
+        3
+        >>> NaturalSemiring(3, 4).period()
+        4
+    '''
+    def __init__(self, threshold, period):
+        if not (isinstance(period, int) and isinstance(threshold, int)):
+            raise TypeError
+        if period < 1 or threshold < 0:
+            raise ValueError
+
+        self._period = period
+        self._threshold = threshold
+
+    def plus(self, x, y):
+        r'''
+        A function to find the integer sum modulo :math:`\equiv`, of two
+        elements of a natural semiring. Here :math:`\equiv` is the congruence
+        of the natural semiring.
+
+        Args:
+            x (int):    One of the elements to be added.
+            y (int):    The other of the elements to be added.
+
+        Returns:
+            int:   The integer sum modulo :math:`\equiv`, of x and y.
+
+        Raises:
+            TypeError:  If x and y are not both ints.
+            ValueError: If either x or y is negative, or greater than :math:`t
+                        + p - 1`.
+
+        Examples:
+            >>> from semigroups import NaturalSemiring
+            >>> NaturalSemiring(5, 7).plus(3, 10)
+            6
+        '''
+        if not (isinstance(x, int) and isinstance(y, int)):
+            raise TypeError
+        if not ((0 <= x < self._threshold + self._period) and
+                (0 <= y < self._threshold + self._period)):
+            raise ValueError
+
+        return (x + y - self._threshold) % self._period + self._threshold
+
+    def prod(self, x, y):
+        r'''
+        A function to find the integer p modulo :math:`\equiv`, of two
+        elements of a natural semiring, since this is the mutliplicative
+        operation of a natural semiring. Here :math:`\equiv` is the congruence
+        of the natural semiring.
+
+        Args:
+            x (int):    One of the elements to be added.
+            y (int):    The other of the elements to be added.
+
+        Returns:
+            int:   The integer product modulo :math:`\equiv`, of x and y.
+
+        Raises:
+            TypeError:  If x and y are not both ints.
+            ValueError: If either x or y is negative, or greater than :math:`t
+                        + p - 1`.
+
+        Examples:
+            >>> from semigroups import NaturalSemiring
+            >>> NaturalSemiring(5, 7).prod(3, 10)
+            9
+        '''
+        if not (isinstance(x, int) and isinstance(y, int)):
+            raise TypeError
+        if not ((0 <= x < self._threshold + self._period) and
+                (0 <= y < self._threshold + self._period)):
+            raise ValueError
+
+        return (x * y - self._threshold) % self._period + self._threshold
+
+    def period(self):
+        '''
+        A function to find the period of a Natural Semiring instance.
+
+        Returns:
+            int:    period.
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import NaturalSemiring
+            >>> NaturalSemiring(5, 7).period()
+            7
+        '''
+        return self._period
+
+    @staticmethod
+    def zero():
+        '''
+        A function to find the additive identity of a natural semiring, which
+        is 0.
+
+        Returns:
+            int:    0
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import NaturalSemiring
+            >>> NaturalSemiring(5, 7).zero()
+            0
+        '''
+        return 0
+
+    @staticmethod
+    def one():
+        '''
+        A function to find the multiplicative identity of a natural semiring,
+        which is 1.
+
+        Returns:
+            int:    1
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import NaturalSemiring
+            >>> NaturalSemiring(5, 7).one()
+            1
+        '''
+        return 1

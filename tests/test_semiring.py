@@ -3,7 +3,8 @@ import sys
 import os
 from semigroups import (SemiringABC, Integers, MaxPlusSemiring,
                         MinPlusSemiring, BooleanSemiring,
-                        TropicalMaxPlusSemiring, TropicalMinPlusSemiring)
+                        TropicalMaxPlusSemiring, TropicalMinPlusSemiring,
+                        NaturalSemiring)
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if not path in sys.path:
@@ -321,6 +322,80 @@ class TestTropicalMinPlusSemiring(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             TropicalMinPlusSemiring(83).threshold(1)
+
+class TestNaturalSemiring(unittest.TestCase):
+    def test_init(self):
+        self.assertEqual(NaturalSemiring(23, 5).__init__(23, 5), None)
+        self.assertEqual(NaturalSemiring(0, 1).__init__(0, 1), None)
+
+        with self.assertRaises(ValueError):
+            NaturalSemiring(23, 0)
+        with self.assertRaises(ValueError):
+            NaturalSemiring(-1, 26)
+        with self.assertRaises(TypeError):
+            NaturalSemiring(23, 0.0)
+        with self.assertRaises(TypeError):
+            NaturalSemiring()
+        with self.assertRaises(TypeError):
+            NaturalSemiring(23)
+        with self.assertRaises(TypeError):
+            NaturalSemiring('23', 0)
+
+    def test_plus(self):
+        self.assertEqual(NaturalSemiring(5, 7).plus(3, 11), 7)
+        self.assertEqual(NaturalSemiring(0, 1).plus(0, 0), 0)
+        self.assertEqual(NaturalSemiring(26, 73).plus(26, 83), 36)
+
+        with self.assertRaises(TypeError):
+            NaturalSemiring(26, 73).plus(26, float('inf'))
+        with self.assertRaises(TypeError):
+            NaturalSemiring(26, 73).plus(26)
+        with self.assertRaises(TypeError):
+            NaturalSemiring(26, 73).plus()
+        with self.assertRaises(ValueError):
+            NaturalSemiring(26, 73).plus(26, 169)
+        with self.assertRaises(ValueError):
+            NaturalSemiring(26, 73).plus(26, -3)
+
+    def test_prod(self):
+        self.assertEqual(NaturalSemiring(5, 7).prod(3, 11), 5)
+        self.assertEqual(NaturalSemiring(0, 1).prod(0, 0), 0)
+        self.assertEqual(NaturalSemiring(26, 73).prod(26, 83), 41)
+
+        with self.assertRaises(TypeError):
+            NaturalSemiring(26, 73).prod(26, float('inf'))
+        with self.assertRaises(TypeError):
+            NaturalSemiring(26, 73).prod(26)
+        with self.assertRaises(TypeError):
+            NaturalSemiring(26, 73).prod()
+        with self.assertRaises(ValueError):
+            NaturalSemiring(26, 73).prod(26, 169)
+        with self.assertRaises(ValueError):
+            NaturalSemiring(26, 73).prod(26, -3)
+
+    def test_zero(self):
+        self.assertEqual(NaturalSemiring(8, 2).zero(), 0)
+
+        with self.assertRaises(TypeError):
+            NaturalSemiring(7, 26).zero(26)
+
+    def test_one(self):
+        self.assertEqual(NaturalSemiring(8, 17).one(), 1)
+
+        with self.assertRaises(TypeError):
+            NaturalSemiring(27, 89).one(26)
+
+    def test_period(self):
+        self.assertEqual(NaturalSemiring(7, 26).period(), 26)
+
+        with self.assertRaises(TypeError):
+           NaturalSemiring(7, 26).period(1)
+
+    def test_threshold(self):
+        self.assertEqual(NaturalSemiring(20, 6).threshold(), 20)
+
+        with self.assertRaises(TypeError):
+            NaturalSemiring(83, 6).threshold(1)
 
 if __name__ == '__main__':
     unittest.main()
