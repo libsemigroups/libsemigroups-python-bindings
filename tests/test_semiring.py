@@ -2,7 +2,7 @@ import unittest
 import sys
 import os
 from semigroups import (SemiringABC, Integers, MaxPlusSemiring,
-                        MinPlusSemiring)
+                        MinPlusSemiring, BooleanSemiring)
 
 path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if not path in sys.path:
@@ -155,6 +155,37 @@ class TestMinPlusSemiring(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             MinPlusSemiring().one(26)
+
+class TestBooleanSemiring(unittest.TestCase):
+    def test_init(self):
+        BooleanSemiring()
+
+        with self.assertRaises(TypeError):
+            BooleanSemiring(False)
+
+    def test_plus(self):
+        self.assertEqual(BooleanSemiring().plus(True, True), True)
+        self.assertEqual(BooleanSemiring().plus(True, False), True)
+        self.assertEqual(BooleanSemiring().plus(False, False), False)
+
+        with self.assertRaises(TypeError):
+            BooleanSemiring().plus(1, 0)
+        with self.assertRaises(TypeError):
+            BooleanSemiring().plus('True', 'False')
+        with self.assertRaises(TypeError):
+            BooleanSemiring().plus(True)
+
+    def test_prod(self):
+        self.assertEqual(BooleanSemiring().prod(True, True), True)
+        self.assertEqual(BooleanSemiring().prod(True, False), False)
+        self.assertEqual(BooleanSemiring().prod(False, False), False)
+
+        with self.assertRaises(TypeError):
+            BooleanSemiring().prod(1, 0)
+        with self.assertRaises(TypeError):
+            BooleanSemiring().prod('True', 'False')
+        with self.assertRaises(TypeError):
+            BooleanSemiring().prod(True)
 
 if __name__ == '__main__':
     unittest.main()

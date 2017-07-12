@@ -383,3 +383,116 @@ class MinPlusSemiring(SemiringABC):
         '''
 
         return 0
+
+class BooleanSemiring(SemiringABC):
+    r'''
+    The *boolean semiring* is a semiring comprising the set containing
+    True and False, together with the operations or and and (the logical
+    conjunctions).
+
+    Returns:
+        None
+
+    Raises:
+        TypeError:  If any argument is given.
+
+    Examples:
+        >>> from semigroups import BooleanSemiring
+        >>> BooleanSemiring().plus(True, False)
+        True
+        >>> BooleanSemiring().prod(True, False)
+        False
+    '''
+
+    @staticmethod
+    def plus(x, y):
+        '''
+        A function which returns True if either element is True (the logical
+        conjunction or), since this is the additive operation.
+
+        Args:
+            x (bool):    One of the elements to be added.
+            y (bool):    The other of the elements to be added.
+
+        Returns:
+            bool:    The result of x or y.
+
+        Raises:
+            TypeError:  If x and y are not both bools.
+
+        Examples:
+            >>> from semigroups import BooleanSemiring
+            >>> BooleanSemiring().plus(True, True)
+            True
+        '''
+
+        if not (isinstance(x, type(True)) and isinstance(y, type(True))):
+            raise TypeError
+
+        return x or y
+
+    @staticmethod
+    def prod(x, y):
+        '''
+        A function which returns False if either element is False (the logical
+        conjunction and), since this is the multiplicative operation.
+
+        Args:
+            x (bool):    One of the elements to be multiplied.
+            y (bool):    The other of the elements to be multiplied.
+
+        Returns:
+            bool:    The result of x and y.
+
+        Raises:
+            TypeError:  If x and y are not both bools.
+
+        Examples:
+            >>> from semigroups import BooleanSemiring
+            >>> BooleanSemiring().prod(True, True)
+            True
+        '''
+
+        if not (isinstance(x, type(True)) and isinstance(y, type(True))):
+            raise TypeError
+
+        return x and y
+
+    @staticmethod
+    def zero():
+        '''
+        A function to find the additive identity of the boolean semiring, which
+        is False.
+
+        Returns:
+            bool:   False
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import BooleanSemiring
+            >>> BooleanSemiring().zero()
+            False
+        '''
+        return False
+
+    @staticmethod
+    def one():
+        '''
+        A function to find the mutliplicative identity of the boolean semiring,
+        which is True.
+
+        Returns:
+            bool:   True
+
+        Raises:
+            TypeError:  If any argument is given.
+
+        Examples:
+            >>> from semigroups import BooleanSemiring
+            >>> BooleanSemiring().one()
+            True
+        '''
+
+        return True
