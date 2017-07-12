@@ -59,7 +59,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
         for i in alphabet:
             if not i in ('abcdefghijklmnopqrstuvwxyz1' +
                          'ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
-                pure_letter_alphabet = False
+                self._pure_letter_alphabet = False
                 break
 
         for i, rel in enumerate(rels):
@@ -75,7 +75,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
 
         libsemigroups.FpSemigroupNC.__init__(self, len(alphabet), rels)
         if not self.is_obviously_infinite():
-            Semigroup.__init__(self, *[FPSOME(self, i) for i in self.alphabet])
+            Semigroup.__init__(self, *[_FPSOME(self, i) for i in self.alphabet])
 
     def _parse_word(self, word):
         '''
@@ -123,7 +123,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
             raise ValueError('given semigroup is infinite')
         word = self._parse_word(word)
         self.check_word(word)
-        Pyword = libsemigroups.PythonElementNC(FPSOME(self, word))
+        Pyword = libsemigroups.PythonElementNC(_FPSOME(self, word))
         return Semigroup.factorisation(self, Pyword)
 
     def normal_form(self, word):
@@ -173,6 +173,9 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
         return libsemigroups.FpSemigroupNC.size(self)
 
     def __contains__(self, word):
+        if isinstance(word, libsemigroups.PythonElementNC):
+            if isinstance(word.get_value(), _FPSOME):
+                return word.get_value().FpS == self
         if not isinstance(word, str):
             raise ValueError('word should be a string')
         word = self._parse_word(word)
@@ -207,7 +210,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
         '''
         if not self.is_finite():
             raise ValueError('given semigroup is infinite')
-        return FPSOME(self, word1) == FPSOME(self, word2)
+        return _FPSOME(self, word1) == _FPSOME(self, word2)
 
     def is_obviously_infinite(self):
         '''Attempts to check if a finitely presented semigroup is obviously
@@ -303,7 +306,6 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
         self.check_word(word)
         return libsemigroups.FpSemigroupNC.word_to_class_index(self, word)
 
-
 class FpMonoid(FpSemigroup):
     '''
     A *finitely presented monoid* is a quotient of a free monoid on a
@@ -356,13 +358,13 @@ class FpMonoid(FpSemigroup):
         return ('<fp monoid with %d generators and %d relations>'
                 % (nrgens, nrrels))
 
-class FPSOME(libsemigroups.ElementABC):
+class _FPSOME(libsemigroups.ElementABC):
     '''FpSemigroupElement Object
     Examples:
         >>> FpS = FpSemigroup('ab',[['aa','a'],['bbb','ab'],['ab','ba']])
-        >>> FPSOME(FpS,'a')
+        >>> _FPSOME(FpS,'a')
         'a'
-        >>> FPSOME(FpS,'bab')
+        >>> _FPSOME(FpS,'bab')
         'bab'
     '''
 
@@ -381,17 +383,15 @@ class FPSOME(libsemigroups.ElementABC):
             ValueError: If the word contains a generator not n the alphabet
                         of the given semigroup.
         '''
-        if not isinstance(FpS, FpSemigroup):
-            raise TypeError('given Semigroup is not a valid FpSemigroup')
         if not isinstance(word, str):
             raise TypeError('given word must be a string')
         self.FpS = FpS
-        self._Repword = word
+        self.Repword = word
 
         if word == '':
             if isinstance(FpS, FpMonoid):
                 self.word = '1'
-                self._Repword = '1'
+                self.Repword = '1'
             else:
                 self.word = ''
         else:
@@ -400,16 +400,11 @@ class FPSOME(libsemigroups.ElementABC):
         self.FpS.check_word(self.word)
 
     def __eq__(self, other):
-        if not (isinstance(other, FPSOME) and
+        if not (isinstance(other, _FPSOME) and
                 self.FpS is other.FpS):
             return False
-        elif self.word == '' or other.word == '':
-            return self.word == other.word
         return (self.word_to_class_index() ==
                 other.word_to_class_index())
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def word_to_class_index(self):
         return self.FpS.word_to_class_index(self.word)
@@ -417,25 +412,19 @@ class FPSOME(libsemigroups.ElementABC):
     def __hash__(self):
         return self.word_to_class_index()
 
-    @staticmethod
-    def degree():
-        return 0
-
     def identity(self):
-        return FPSOME(self.FpS, '')
+        return _FPSOME(self.FpS, '')
 
     def __mul__(self, other):
-        if self.word == '' and other.word == '':
-            raise ValueError('no empty word in this semigroup')
-        if not (isinstance(other, FPSOME) and
+        if not (isinstance(other, _FPSOME) and
                 self.FpS is other.FpS):
             raise TypeError('given words are not members'+
                             ' of the same FpSemigroup')
 
-        return FPSOME(self.FpS, self.word + other.word)
+        return _FPSOME(self.FpS, self.word + other.word)
 
     def __repr__(self):
-        return '\'' + self._Repword + '\''
+        return '\'' + self.Repword + '\''
 
 def _remove_brackets(word):
     # pylint: disable = too-many-branches
