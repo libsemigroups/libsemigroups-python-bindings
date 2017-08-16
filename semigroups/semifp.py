@@ -177,7 +177,7 @@ class FpSemigroup(libsemigroups.FpSemigroupNC, Semigroup):
             if isinstance(word.get_value(), _FPSOME):
                 return word.get_value().FpS == self
         if not isinstance(word, str):
-            raise ValueError('word should be a string')
+            return False
         word = self._parse_word(word)
         if word == '':
             return isinstance(self, FpMonoid)

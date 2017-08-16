@@ -122,8 +122,7 @@ class TestFpSemigroup(unittest.TestCase):
 
     def test_contains(self):
         FpS = FpSemigroup("ab", [["aa", "a"], ["bbb", "b"], ["ba", "ab"]])
-        with self.assertRaises(ValueError):
-            1 in FpS
+        self.assertFalse(1 in FpS)
         self.assertTrue("abb" in FpS)
         self.assertFalse("c" in FpS)
         self.assertFalse("" in FpS)
@@ -191,8 +190,7 @@ class TestFpMonoid(unittest.TestCase):
 
     def test_contains(self):
         FpM = FpMonoid("ab", [["aa", "a"], ["bbb", "b"], ["ba", "ab"]])
-        with self.assertRaises(ValueError):
-            1 in FpM
+        self.assertFalse(1 in FpM)
         self.assertTrue("abb" in FpM)
         self.assertTrue("" in FpM)
 
