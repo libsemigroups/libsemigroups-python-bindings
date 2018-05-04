@@ -12,6 +12,12 @@ from libcpp.pair cimport pair
 from libcpp cimport bool
 from libcpp.string cimport string
 
+cdef extern from "<libsemigroups/recvec.h>" namespace "libsemigroups":
+    cdef cppclass RecVec[T]:
+        size_t nr_rows()
+        size_t nr_cols()
+        T get(size_t, size_t)
+
 cdef extern from "<libsemigroups/elements.h>" namespace "libsemigroups":
     cdef cppclass Element:
         Element* identity()
@@ -75,6 +81,8 @@ cdef extern from "<libsemigroups/semigroups.h>" namespace "libsemigroups":
         bool test_membership(Element* x)
         vector[size_t]* factorisation(size_t pos)
         void enumerate(size_t limit)
+        RecVec[size_t]* right_cayley_graph()
+        RecVec[size_t]* left_cayley_graph()
 
 cdef extern from "<libsemigroups/cong.h>" namespace "libsemigroups":
     cdef cppclass Congruence:

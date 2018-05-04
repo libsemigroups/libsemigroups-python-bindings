@@ -676,6 +676,28 @@ cdef class SemigroupNC:
                 yield self.new_from_handle(element)
             pos += 1
 
+    def right_cayley_graph(self):
+        cdef libsemigroups.RecVec[size_t]* c_graph = self._handle.right_cayley_graph()
+        adjacencies_list = []
+        for i in range(c_graph[0].nr_rows()):
+            adjacencies_list.append([])
+            for j in range(c_graph[0].nr_cols()):
+                x = c_graph.get(i, j)
+                adjacencies_list[-1].append(x)
+
+        return adjacencies_list
+
+    def left_cayley_graph(self):
+        cdef libsemigroups.RecVec[size_t]* c_graph = self._handle.left_cayley_graph()
+        adjacencies_list = []
+        for i in range(c_graph[0].nr_rows()):
+            adjacencies_list.append([])
+            for j in range(c_graph[0].nr_cols()):
+                x = c_graph.get(i, j)
+                adjacencies_list[-1].append(x)
+
+        return adjacencies_list
+
 cdef class FpSemigroupNC(SemigroupNC):
     cdef libsemigroups.Congruence* _congruence
     cdef libsemigroups.RWS* _rws

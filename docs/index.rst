@@ -36,4 +36,5 @@ suggestions for features that you'd like to see please use the
     semigroups.semiring
     semigrp
     semifp
+    semigroups.cayley_graph
     libsemigroups
